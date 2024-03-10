@@ -1,3 +1,5 @@
+# File witten with help from ChatGPT...
+
 import esphome.config_validation as cv
 import esphome.codegen as cg
 from esphome.components import uart, switch

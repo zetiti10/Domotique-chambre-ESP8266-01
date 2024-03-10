@@ -6,7 +6,9 @@
 namespace esphome {
 namespace DomoticSystem {
 
-static const char *const TAG = "système de domotique";
+// I will probably change the name later because I think it's not very English...
+static const char *const TAG = "domotic system";
+// I know that delays are not recommended, but the ESP will be only used for the communication.
 static const int UART_WAITING_TIME = 10;
 
 void DomoticSystemDevice::setID(int ID) { ID_ = ID; }
@@ -36,7 +38,7 @@ void DomoticSystemSwitch::write_state(bool state) {
   this->write_byte(state);
   this->write_byte('\n');
 
-  // Pas de retour d'état ici : mise à jour dynamique.
+  // No publish_state here, because it will be updated by the Arduino (see loop).
 }
 
 void DomoticSystem::setLEDCube(DomoticSystemSwitch *LEDCube) { LEDCube_ = LEDCube; }
@@ -46,7 +48,8 @@ void DomoticSystem::setup() {
 
   while (!this->available()) {
     if ((millis() - initialTime) >= 10000) {
-      ESP_LOGE(TAG, "Impossible d'établir la communication avec l'Arduino Méga.");
+      ESP_LOGE(TAG, "Unable to start communication with the Arduino Mega.");
+      this->mark_failed();
       return;
     }
   }
@@ -63,13 +66,18 @@ void DomoticSystem::setup() {
     receivedMessage += letter;
   }
 
+  // At starting, "2" is sent by the Arduino.
   if (receivedMessage != "2")
-    ESP_LOGW(TAG, "Message inconnu reçu : %s", receivedMessage);
+    ESP_LOGW(TAG, "Received unknow message : %s", receivedMessage);
 
-  ESP_LOGD(TAG, "Initialisation terminée avec succès !");
+  // Response.
+  this->write_byte(2);
+
+  ESP_LOGD(TAG, "Setup finished");
 }
 
 void DomoticSystem::loop() {
+  // Receive and process messages.
   if (!this->available())
     return;
 
@@ -85,6 +93,7 @@ void DomoticSystem::loop() {
 
   int ID = getIntFromString(receivedMessage, 1, 2);
 
+  // For this first test, I only implemented LED cube switch updates.
   switch (getIntFromString(receivedMessage, 0, 1)) {
     case 1: {
       switch (getIntFromString(receivedMessage, 3, 2))
