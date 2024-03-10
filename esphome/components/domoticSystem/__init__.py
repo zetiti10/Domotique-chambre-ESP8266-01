@@ -17,7 +17,7 @@ CONFIG_SCHEMA = cv.Schema(
     {
         cv.Required(CONF_LED_CUBE): led_cube_schema,
     }
-)
+).extend(cv.COMPONENT_SCHEMA)
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
