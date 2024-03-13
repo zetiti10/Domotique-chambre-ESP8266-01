@@ -73,6 +73,9 @@ void ConnectedBedroom::loop() {
 void ConnectedBedroom::process_message_() {
   ESP_LOGD(TAG, "Received message: %s", this->receivedMessage_);
 
+  String test = "test de message";
+  ESP_LOGD(TAG, "Message: %s", this->test);
+
   int ID = getIntFromString(this->receivedMessage_, 1, 2);
 
   switch (getIntFromString(this->receivedMessage_, 0, 1)) {
