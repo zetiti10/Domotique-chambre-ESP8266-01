@@ -59,14 +59,13 @@ int getIntFromString(String &string, int position, int lenght) {
 void ConnectedBedroom::loop() {
   // Receive and process messages.
   while (this->available()) {
-    uint8_t c;
-    this->read_byte(&c);
-    if (c == '\r')
+    char letter = this->read();
+    if (letter == '\r')
       continue;
-    if (c == '\n')
+    if (letter == '\n')
       this->process_message_();
     else
-      this->receivedMessage_ += c;
+      this->receivedMessage_ += letter;
   }
 }
 
