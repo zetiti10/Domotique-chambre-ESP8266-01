@@ -60,11 +60,12 @@ void ConnectedBedroom::setup() {
 }
 
 void ConnectedBedroom::loop() {
-  ESP_LOGD(TAG, "LOOP");
 
   // Receive and process messages.
   if (!this->available())
     return;
+
+  delay(UART_WAITING_TIME);
 
   String receivedMessage;
   while (this->available() > 0) {

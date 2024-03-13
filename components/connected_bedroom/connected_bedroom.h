@@ -9,6 +9,7 @@ namespace connected_bedroom {
 
 class ConnectedBedroom : public Component, public uart::UARTDevice {
  public:
+  float get_setup_priority() const override { return setup_priority::DATA; }
   void setup() override;
   void loop() override;
   void add_sensor(int communication_id, sensor::Sensor *sens);
