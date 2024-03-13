@@ -74,13 +74,23 @@ void ConnectedBedroom::process_message_() {
 
   int ID = getIntFromString(this->receivedMessage_, 1, 2);
 
+  ESP_LOGD(TAG, "Request type: %i", getIntFromString(this->receivedMessage_, 0, 1));
   switch (getIntFromString(this->receivedMessage_, 0, 1)) {
     case 1: {
+      ESP_LOGD(TAG, "Information type: %i", getIntFromString(this->receivedMessage_, 3, 2));
       switch (getIntFromString(this->receivedMessage_, 3, 2)) {
-        case 1: {
+        case 7: {
+          ESP_LOGD(TAG, "Device ID: %i", ID);
           sensor::Sensor *sens = this->get_sensor_from_communication_id_(ID);
+          ESP_LOGD(TAG, "Got sensor: %i", sens);
           if (sens != nullptr)
+          {
+            ESP_LOGD(TAG, "Valid device");
             sens->publish_state(getIntFromString(this->receivedMessage_, 5, 1));
+          }
+
+          else
+            ESP_LOGD(TAG, "Invalid device");
           break;
         }
       }
