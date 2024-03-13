@@ -59,11 +59,8 @@ int getIntFromString(String &string, int position, int lenght) {
 void ConnectedBedroom::loop() {
   // Receive and process messages.
   while (this->available()) {
-    int letter = this->read();
-    ESP_LOGD(TAG, "Received letter INT: %i", letter);
-    ESP_LOGD(TAG, "Received letter CHAR: %c", char(letter));
-    if (letter == -1)
-      continue;
+    char letter = this->read();
+    ESP_LOGD(TAG, "Message: %s", this->receivedMessage_);
     if (letter == '\r')
       continue;
     if (letter == '\n')
