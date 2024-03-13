@@ -4,8 +4,6 @@
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/uart/uart.h"
 
-#define USE_SENSOR
-
 namespace esphome {
 namespace connected_bedroom {
 
