@@ -74,7 +74,7 @@ void ConnectedBedroom::process_message_() {
   ESP_LOGD(TAG, "Received message: %s", this->receivedMessage_);
 
   String test = "test de message";
-  ESP_LOGD(TAG, "Message: %s", this->test);
+  ESP_LOGD(TAG, "Message: %s", test);
 
   int ID = getIntFromString(this->receivedMessage_, 1, 2);
 
