@@ -1,19 +1,15 @@
-#ifdef USE_ARDUINO
-
-#include "domoticSystem.h"
+#include "connected_bedroom.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
-namespace DomoticSystem {
+namespace connected_bedroom {
 
-// I will probably change the name later because I think it's not very English...
-static const char *const TAG = "domotic system";
+static const char *TAG = "connected.bedroom";
+
 // I know that delays are not recommended, but the ESP will be only used for the communication.
 static const int UART_WAITING_TIME = 10;
 
-void DomoticSystemDevice::setID(int ID) { ID_ = ID; }
-
-String DomoticSystemDevice::addZeros(int number, int length) {
+String addZeros(int number, int length) {
   String result = String(number);
   while (result.length() < (unsigned int) length) {
     result = "0" + result;
@@ -21,7 +17,7 @@ String DomoticSystemDevice::addZeros(int number, int length) {
   return result;
 }
 
-int DomoticSystemDevice::getIntFromString(String &string, int position, int lenght) {
+int getIntFromString(String &string, int position, int lenght) {
   int result = 0;
 
   for (int i = 0; i < lenght; i++)
@@ -30,20 +26,7 @@ int DomoticSystemDevice::getIntFromString(String &string, int position, int leng
   return result;
 }
 
-void DomoticSystemSwitch::write_state(bool state) {
-  this->write_byte(0);
-  this->write_str(this->addZeros(ID_, 2).c_str());
-  this->write_byte(0);
-  this->write_byte(0);
-  this->write_byte(state);
-  this->write_byte('\n');
-
-  // No publish_state here, because it will be updated by the Arduino (see loop).
-}
-
-void DomoticSystem::setLEDCube(DomoticSystemSwitch *LEDCube) { LEDCube_ = LEDCube; }
-
-void DomoticSystem::setup() {
+void ConnectedBedroom::setup() {
   unsigned long initialTime = millis();
 
   while (!this->available()) {
@@ -68,7 +51,7 @@ void DomoticSystem::setup() {
 
   // At starting, "2" is sent by the Arduino.
   if (receivedMessage != "2")
-    ESP_LOGW(TAG, "Received unknow message : %s", receivedMessage);
+    ESP_LOGW(TAG, "Received unknow message: %s", receivedMessage);
 
   // Response.
   this->write_byte(2);
@@ -76,7 +59,7 @@ void DomoticSystem::setup() {
   ESP_LOGD(TAG, "Setup finished");
 }
 
-void DomoticSystem::loop() {
+void ConnectedBedroom::loop() {
   // Receive and process messages.
   if (!this->available())
     return;
@@ -91,17 +74,17 @@ void DomoticSystem::loop() {
     receivedMessage += letter;
   }
 
+  ESP_LOGD(TAG, "Received message: %s", receivedMessage);
+
   int ID = getIntFromString(receivedMessage, 1, 2);
 
-  // For this first test, I only implemented LED cube switch updates.
   switch (getIntFromString(receivedMessage, 0, 1)) {
     case 1: {
-      switch (getIntFromString(receivedMessage, 3, 2))
-      {
-        case 1:
-        {
-          if (ID == 2)
-            LEDCube_->publish_state(getIntFromString(receivedMessage, 5, 1));
+      switch (getIntFromString(receivedMessage, 3, 2)) {
+        case 1: {
+          sensor::Sensor *sens = this->get_sensor_from_communication_id(ID);
+          if (sens != nullptr)
+            sens->publish_state(getIntFromString(receivedMessage, 5, 1));
           break;
         }
       }
@@ -110,7 +93,17 @@ void DomoticSystem::loop() {
   }
 }
 
-}  // namespace DomoticSystem
-}  // namespace esphome
+void ConnectedBedroom::add_sensor(int communication_id, sensor::Sensor *sens) {
+  this->sensors_.push_back(std::make_pair(communication_id, sens));
+}
 
-#endif  // USE_ARDUINO
+sensor::Sensor *ConnectedBedroom::get_sensor_from_communication_id(int ID) {
+  for (int i = 0; i < sensors_.size(); i++) {
+    if (sensors_[i].first == ID)
+      return sensors_[i].second;
+  }
+  return nullptr;
+}
+
+}  // namespace connected_bedroom
+}  // namespace esphome
