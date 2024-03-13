@@ -60,6 +60,8 @@ void ConnectedBedroom::setup() {
 }
 
 void ConnectedBedroom::loop() {
+  ESP_LOGD(TAG, "LOOP");
+
   // Receive and process messages.
   if (!this->available())
     return;
