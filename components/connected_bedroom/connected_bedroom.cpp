@@ -27,7 +27,7 @@ int getIntFromString(String &string, int position, int lenght) {
 }
 
 void ConnectedBedroom::setup() {
-  unsigned long initialTime = millis();
+  /*unsigned long initialTime = millis();
 
   while (!this->available()) {
     if ((millis() - initialTime) >= 10000) {
@@ -54,7 +54,7 @@ void ConnectedBedroom::setup() {
     ESP_LOGW(TAG, "Received unknow message: %s", receivedMessage);
 
   // Response.
-  this->write_byte(2);
+  this->write_byte(2);*/
 
   ESP_LOGD(TAG, "Setup finished");
 }
