@@ -19,7 +19,7 @@ class ConnectedBedroom : public Component, public uart::UARTDevice {
   void process_message_();
   sensor::Sensor *get_sensor_from_communication_id_(int ID);
 
-  String receivedMessage_;
+  std::vector<uint8_t> receivedMessage_;
   std::vector<std::pair<int, sensor::Sensor *>> sensors_;
 };
 

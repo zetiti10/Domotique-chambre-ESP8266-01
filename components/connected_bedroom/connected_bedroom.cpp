@@ -14,11 +14,11 @@ String addZeros(int number, int length) {
   return result;
 }
 
-int getIntFromString(String &string, int position, int lenght) {
+int getIntFromVector(std::vector<uint8_t> &string, int position, int lenght) {
   int result = 0;
 
   for (int i = 0; i < lenght; i++)
-    result += (string.charAt(position + i) - '0') * pow(10, ((lenght - i) - 1));
+    result += (string[position + i] - '0') * pow(10, ((lenght - i) - 1));
 
   return result;
 }
@@ -59,32 +59,28 @@ int getIntFromString(String &string, int position, int lenght) {
 void ConnectedBedroom::loop() {
   // Receive and process messages.
   while (this->available()) {
-    char letter = this->read();
-    ESP_LOGD(TAG, "Message: %s", this->receivedMessage_);
+    uint8_t letter = this->read();
     if (letter == '\r')
       continue;
     if (letter == '\n')
       this->process_message_();
     else
-      this->receivedMessage_ += letter;
+      this->receivedMessage_.push_back(letter);
   }
 }
 
 void ConnectedBedroom::process_message_() {
   ESP_LOGD(TAG, "Received message: %s", this->receivedMessage_);
 
-  String test = "test de message";
-  ESP_LOGD(TAG, "Message: %s", test);
+  int ID = getIntFromVector(this->receivedMessage_, 1, 2);
 
-  int ID = getIntFromString(this->receivedMessage_, 1, 2);
-
-  switch (getIntFromString(this->receivedMessage_, 0, 1)) {
+  switch (getIntFromVector(this->receivedMessage_, 0, 1)) {
     case 1: {
-      switch (getIntFromString(this->receivedMessage_, 3, 2)) {
+      switch (getIntFromVector(this->receivedMessage_, 3, 2)) {
         case 7: {
           sensor::Sensor *sens = this->get_sensor_from_communication_id_(ID);
           if (sens != nullptr)
-            sens->publish_state(getIntFromString(this->receivedMessage_, 5, 1));
+            sens->publish_state(getIntFromVector(this->receivedMessage_, 5, 1));
           break;
         }
       }
@@ -92,7 +88,7 @@ void ConnectedBedroom::process_message_() {
     }
   }
 
-  this->receivedMessage_ = "";
+  this->receivedMessage_.clear();
 }
 
 void esphome::serial::ConnectedBedroom::dump_config() {
