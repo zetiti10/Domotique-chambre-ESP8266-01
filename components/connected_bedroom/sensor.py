@@ -9,7 +9,7 @@ CODEOWNERS = ["@zetiti10"]
 
 DEPENDENCIES = ['uart']
 
-CONF_COMMUNICATION_ID = "communication_idd"
+CONF_COMMUNICATION_ID = "communication_id"
 
 serial_ns = cg.esphome_ns.namespace('serial')
 
