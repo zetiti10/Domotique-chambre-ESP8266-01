@@ -60,7 +60,6 @@ void ConnectedBedroom::setup() {
 }
 
 void ConnectedBedroom::loop() {
-
   // Receive and process messages.
   if (!this->available())
     return;
