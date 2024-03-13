@@ -11,9 +11,9 @@ DEPENDENCIES = ['uart']
 
 CONF_COMMUNICATION_ID = "communication_id"
 
-connected_bedroom_ns = cg.esphome_ns.namespace('connected_bedroom')
+serial_ns = cg.esphome_ns.namespace('serial')
 
-ConnectedBedroom = connected_bedroom_ns.class_('ConnectedBedroom', cg.Component, sensor.Sensor, uart.UARTDevice)
+ConnectedBedroom = serial_ns.class_('ConnectedBedroom', cg.Component, sensor.Sensor, uart.UARTDevice)
 
 
 CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(

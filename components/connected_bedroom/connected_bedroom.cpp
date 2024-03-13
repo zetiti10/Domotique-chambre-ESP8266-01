@@ -2,12 +2,9 @@
 #include "esphome/core/log.h"
 
 namespace esphome {
-namespace connected_bedroom {
+namespace serial {
 
 static const char *TAG = "connected.bedroom";
-
-// I know that delays are not recommended, but the ESP will be only used for the communication.
-static const int UART_WAITING_TIME = 10;
 
 String addZeros(int number, int length) {
   String result = String(number);
@@ -26,8 +23,8 @@ int getIntFromString(String &string, int position, int lenght) {
   return result;
 }
 
-void ConnectedBedroom::setup() {
-  /*unsigned long initialTime = millis();
+/*void ConnectedBedroom::setup() {
+  unsigned long initialTime = millis();
 
   while (!this->available()) {
     if ((millis() - initialTime) >= 10000) {
@@ -54,44 +51,52 @@ void ConnectedBedroom::setup() {
     ESP_LOGW(TAG, "Received unknow message: %s", receivedMessage);
 
   // Response.
-  this->write_byte(2);*/
+  this->write_byte(2);
 
   ESP_LOGD(TAG, "Setup finished");
-}
+}*/
 
 void ConnectedBedroom::loop() {
   // Receive and process messages.
-  if (!this->available())
-    return;
-
-  delay(UART_WAITING_TIME);
-
-  String receivedMessage;
-  while (this->available() > 0) {
-    char letter = this->read();
-
-    if (letter == '\n')
-      break;
-
-    receivedMessage += letter;
+  while (this->available()) {
+    uint8_t c;
+    this->read_byte(&c);
+    if (c == '\r')
+      continue;
+    if (c == '\n')
+      this->process_message_();
+    else
+      this->receivedMessage_ += c;
   }
+}
 
-  ESP_LOGD(TAG, "Received message: %s", receivedMessage);
+void ConnectedBedroom::process_message_() {
+  ESP_LOGD(TAG, "Received message: %s", this->receivedMessage_);
 
-  int ID = getIntFromString(receivedMessage, 1, 2);
+  int ID = getIntFromString(this->receivedMessage_, 1, 2);
 
-  switch (getIntFromString(receivedMessage, 0, 1)) {
+  switch (getIntFromString(this->receivedMessage_, 0, 1)) {
     case 1: {
-      switch (getIntFromString(receivedMessage, 3, 2)) {
+      switch (getIntFromString(this->receivedMessage_, 3, 2)) {
         case 1: {
-          sensor::Sensor *sens = this->get_sensor_from_communication_id(ID);
+          sensor::Sensor *sens = this->get_sensor_from_communication_id_(ID);
           if (sens != nullptr)
-            sens->publish_state(getIntFromString(receivedMessage, 5, 1));
+            sens->publish_state(getIntFromString(this->receivedMessage_, 5, 1));
           break;
         }
       }
       break;
     }
+  }
+
+  this->receivedMessage_ = "";
+}
+
+void esphome::serial::ConnectedBedroom::dump_config() {
+  ESP_LOGCONFIG("", "Connected bedroom");
+  for (auto sens : this->sensors_) {
+    ESP_LOGCONFIG(TAG, "Communication id %d", sens.first);
+    LOG_SENSOR(TAG, "", sens.second);
   }
 }
 
@@ -99,7 +104,7 @@ void ConnectedBedroom::add_sensor(int communication_id, sensor::Sensor *sens) {
   this->sensors_.push_back(std::make_pair(communication_id, sens));
 }
 
-sensor::Sensor *ConnectedBedroom::get_sensor_from_communication_id(int ID) {
+sensor::Sensor *ConnectedBedroom::get_sensor_from_communication_id_(int ID) {
   for (int i = 0; i < sensors_.size(); i++) {
     if (sensors_[i].first == ID)
       return sensors_[i].second;
@@ -107,5 +112,5 @@ sensor::Sensor *ConnectedBedroom::get_sensor_from_communication_id(int ID) {
   return nullptr;
 }
 
-}  // namespace connected_bedroom
+}  // namespace serial
 }  // namespace esphome
