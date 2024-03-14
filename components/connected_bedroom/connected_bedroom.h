@@ -23,7 +23,5 @@ class ConnectedBedroom : public Component, public uart::UARTDevice {
   std::vector<std::pair<int, sensor::Sensor *>> sensors_;
 };
 
-//test
-
 }  // namespace serial
 }  // namespace esphome
