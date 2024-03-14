@@ -5,7 +5,7 @@
 #include "esphome/components/uart/uart.h"
 
 namespace esphome {
-namespace serial {
+namespace connected_bedroom {
 
 class ConnectedBedroom : public Component, public uart::UARTDevice {
  public:
@@ -22,6 +22,8 @@ class ConnectedBedroom : public Component, public uart::UARTDevice {
   std::vector<uint8_t> receivedMessage_;
   std::vector<std::pair<int, sensor::Sensor *>> sensors_;
 };
+
+//test
 
 }  // namespace serial
 }  // namespace esphome
