@@ -89,10 +89,10 @@ void ConnectedBedroom::process_message_() {
         }
 
         case 7: {
-          sensor::Sensor *analog_sensor = this->get_analog_sensor_from_communication_id_(ID);
+          binary_sensor::BinarySensor *binary_sensor = this->get_binary_sensor_from_communication_id_(ID);
 
-          if (analog_sensor != nullptr)
-            analog_sensor->publish_state(getIntFromVector(this->receivedMessage_, 5, 1));
+          if (binary_sensor != nullptr)
+            binary_sensor->publish_state(getIntFromVector(this->receivedMessage_, 5, 1));
 
           break;
         }
