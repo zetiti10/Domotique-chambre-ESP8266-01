@@ -70,6 +70,8 @@ void ConnectedBedroom::loop() {
 
     else
       this->receivedMessage_.push_back(letter);
+
+    ESP_LOGD(TAG, "Received message: %s", this->receivedMessage_);
   }
 }
 
@@ -185,6 +187,8 @@ void ConnectedBedroomSwitch::write_state(bool state) {
   this->parent_->write_byte(0);
   this->parent_->write_byte(state);
   this->parent_->write_byte('\n');
+
+  ESP_LOGD(TAG, "Message sent!");
 }
 
 }  // namespace connected_bedroom
