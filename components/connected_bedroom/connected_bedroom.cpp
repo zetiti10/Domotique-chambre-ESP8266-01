@@ -70,8 +70,6 @@ void ConnectedBedroom::loop() {
 
     else
       this->receivedMessage_.push_back(letter);
-
-    ESP_LOGD(TAG, "Received message: %s", this->receivedMessage_);
   }
 }
 
