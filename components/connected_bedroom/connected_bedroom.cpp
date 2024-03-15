@@ -177,11 +177,11 @@ void ConnectedBedroomSwitch::set_parent(ConnectedBedroom *parent) {
 }
 
 void ConnectedBedroomSwitch::write_state(bool state) {
-  this->parent_->write(0);
+  this->parent_->write('0');
   this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
-  this->parent_->write(0);
-  this->parent_->write(0);
-  this->parent_->write(state);
+  this->parent_->write('0');
+  this->parent_->write('0');
+  this->parent_->write((char)state);
   this->parent_->write('\n');
 }
 
