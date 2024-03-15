@@ -186,7 +186,7 @@ void ConnectedBedroomSwitch::write_state(bool state) {
   this->parent_->write_byte(state);
   this->parent_->write_byte('\n');
 
-  ESP_LOGD(TAG, "Message sent!");
+  ESP_LOGD(TAG, "Message sent with id %s", addZeros(this->communication_id_, 2).c_str());
 }
 
 }  // namespace connected_bedroom

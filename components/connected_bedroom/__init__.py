@@ -62,7 +62,7 @@ async def to_code(config):
     for conf in config[CONF_BINARY_SENSORS]:
         binary_sensor_ = await binary_sensor.new_binary_sensor(conf)
         communication_id = conf[CONF_COMMUNICATION_ID]
-        cg.add(var.add_binay_sensor(communication_id, binary_sensor_))
+        cg.add(var.add_binary_sensor(communication_id, binary_sensor_))
 
     for conf in config[CONF_SWITCHES]:
         switch_ = await switch.new_switch(conf)
