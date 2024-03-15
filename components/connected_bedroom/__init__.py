@@ -40,6 +40,7 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
         cv.Required(CONF_SWITCHES): cv.ensure_list(
             switch.SWITCH_SCHEMA.extend(
                 {
+                    cv.GenerateID(): cv.declare_id(ConnectedBedroomSwitch),
                     cv.Required(CONF_COMMUNICATION_ID): cv.positive_int,
                 }
             )
