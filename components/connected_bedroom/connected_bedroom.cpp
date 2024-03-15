@@ -74,8 +74,6 @@ void ConnectedBedroom::loop() {
 }
 
 void ConnectedBedroom::process_message_() {
-  ESP_LOGD(TAG, "Received message: %s", this->receivedMessage_);
-
   int ID = getIntFromVector(this->receivedMessage_, 1, 2);
 
   switch (getIntFromVector(this->receivedMessage_, 0, 1)) {
@@ -179,14 +177,12 @@ void ConnectedBedroomSwitch::set_parent(ConnectedBedroom *parent) {
 }
 
 void ConnectedBedroomSwitch::write_state(bool state) {
-  this->parent_->write_byte(0);
+  this->parent_->write(0);
   this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
-  this->parent_->write_byte(0);
-  this->parent_->write_byte(0);
-  this->parent_->write_byte(state);
-  this->parent_->write_byte('\n');
-
-  ESP_LOGD(TAG, "Message sent with id %s", addZeros(this->communication_id_, 2).c_str());
+  this->parent_->write(0);
+  this->parent_->write(0);
+  this->parent_->write(state);
+  this->parent_->write('\n');
 }
 
 }  // namespace connected_bedroom
