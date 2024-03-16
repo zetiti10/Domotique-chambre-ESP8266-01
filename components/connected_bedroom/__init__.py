@@ -2,7 +2,7 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import automation
 from esphome.components import uart, sensor, binary_sensor, switch, light
-from esphome.const import CONF_ID, CONF_SWITCHES
+from esphome.const import CONF_ID, CONF_SWITCHES, CONF_OUTPUT_ID
 
 CODEOWNERS = ["@zetiti10"]
 
@@ -51,7 +51,7 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
         cv.Required(CONF_RGB_LED_STRIPS): cv.ensure_list(
             light.RGB_LIGHT_SCHEMA.extend(
                 {
-                    cv.GenerateID(): cv.declare_id(ConnectedBedroomRGBLEDStrip),
+                    cv.GenerateID(CONF_OUTPUT_ID): cv.declare_id(ConnectedBedroomRGBLEDStrip),
                     cv.Required(CONF_COMMUNICATION_ID): cv.positive_int,
                 }
             )
@@ -61,7 +61,7 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
 
 
 async def to_code(config):
-    var = cg.new_Pvariable(config[CONF_ID])
+    var = cg.new_Pvariable(config[CONF_OUTPUT_ID])
     await cg.register_component(var, config)
     await uart.register_uart_device(var, config)
 
