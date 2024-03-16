@@ -4,10 +4,13 @@
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/switch/switch.h"
+#include "esphome/components/light/light_output.h"
 #include "esphome/components/uart/uart.h"
 
 namespace esphome {
 namespace connected_bedroom {
+
+class ConnectedBedroomRGBLEDStrip;
 
 class ConnectedBedroom : public Component, public uart::UARTDevice {
  public:
@@ -18,6 +21,7 @@ class ConnectedBedroom : public Component, public uart::UARTDevice {
   void add_analog_sensor(int communication_id, sensor::Sensor *analog_sensor);
   void add_binary_sensor(int communication_id, binary_sensor::BinarySensor *binary_sensor);
   void add_switch(int communication_id, switch_::Switch *switch_);
+  void add_RGB_LED_strip(int communication_id, ConnectedBedroomRGBLEDStrip *RGB_LED_strip);
 
  protected:
   void process_message_();
@@ -25,26 +29,47 @@ class ConnectedBedroom : public Component, public uart::UARTDevice {
   sensor::Sensor *get_analog_sensor_from_communication_id_(int communication_id) const;
   binary_sensor::BinarySensor *get_binary_sensor_from_communication_id_(int communication_id) const;
   switch_::Switch *get_switch_from_communication_id_(int communication_id) const;
+  ConnectedBedroomRGBLEDStrip *get_RGB_LED_strip_from_communication_id_(int communication_id) const;
 
   std::vector<uint8_t> receivedMessage_;
 
   std::vector<std::pair<int, sensor::Sensor *>> analog_sensors_;
   std::vector<std::pair<int, binary_sensor::BinarySensor *>> binary_sensors_;
   std::vector<std::pair<int, switch_::Switch *>> switches_;
+  std::vector<std::pair<int, ConnectedBedroomRGBLEDStrip *>> RGB_LED_strips_;
 };
 
-class ConnectedBedroomSwitch : public Component, public switch_::Switch {
+class ConnectedBedroomDevice {
  public:
-  void dump_config() override;
-
   void set_communication_id(int communication_id);
   void set_parent(ConnectedBedroom *parent);
+  virtual void register_device() = 0;
+
+ protected:
+  ConnectedBedroom *parent_;
+  int communication_id_;
+};
+
+class ConnectedBedroomSwitch : public Component, public switch_::Switch, public ConnectedBedroomDevice {
+ public:
+  void dump_config() override;
+  void register_device() override;
 
  protected:
   void write_state(bool state) override;
+};
 
-  ConnectedBedroom *parent_;
-  int communication_id_;
+class ConnectedBedroomRGBLEDStrip : public Component, public light::LightOutput, public ConnectedBedroomDevice {
+ public:
+  light::LightTraits get_traits() override;
+  void write_state(light::LightState *state);
+
+  void register_device() override;
+  void set_light_state_object(light::LightState *light_state);
+  light::LightState *get_light_state_object();
+
+ protected:
+  light::LightState *light_state_;
 };
 
 // Binary light

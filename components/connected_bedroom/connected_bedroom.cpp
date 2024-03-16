@@ -24,6 +24,10 @@ int getIntFromVector(std::vector<uint8_t> &string, int position, int lenght) {
   return result;
 }
 
+float mapfloat(float x, float in_min, float in_max, float out_min, float out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 float ConnectedBedroom::get_setup_priority() const { return setup_priority::DATA; }
 
 void ConnectedBedroom::loop() {
@@ -52,6 +56,23 @@ void ConnectedBedroom::process_message_() {
 
           if (switch_ != nullptr)
             switch_->publish_state(getIntFromVector(this->receivedMessage_, 5, 1));
+        }
+
+        case 2: {
+          ConnectedBedroomRGBLEDStrip *RGB_LED_strip_ = this->get_RGB_LED_strip_from_communication_id_(ID);
+
+          switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
+            case 0:
+              float r = mapfloat(getIntFromVector(this->receivedMessage_, 6, 3), 0.0f, 255.0f, 0.0f, 1.0f);
+              float g = mapfloat(getIntFromVector(this->receivedMessage_, 9, 3), 0.0f, 255.0f, 0.0f, 1.0f);
+              float b = mapfloat(getIntFromVector(this->receivedMessage_, 12, 3), 0.0f, 255.0f, 0.0f, 1.0f);
+
+              // Not finished : update state and effects (animations).
+
+              break;
+          }
+
+          break;
         }
 
         case 7: {
@@ -130,6 +151,10 @@ void ConnectedBedroom::add_switch(int communication_id, switch_::Switch *switch_
   this->switches_.push_back(std::make_pair(communication_id, switch_));
 }
 
+void ConnectedBedroom::add_RGB_LED_strip(int communication_id, ConnectedBedroomRGBLEDStrip *RGB_LED_strip) {
+  this->RGB_LED_strips_.push_back(std::make_pair(communication_id, RGB_LED_strip));
+}
+
 sensor::Sensor *ConnectedBedroom::get_analog_sensor_from_communication_id_(int communication_id) const {
   auto it = std::find_if(analog_sensors_.begin(), analog_sensors_.end(),
                          [communication_id](const std::pair<int, sensor::Sensor *> &element) {
@@ -169,14 +194,30 @@ switch_::Switch *ConnectedBedroom::get_switch_from_communication_id_(int communi
   }
 }
 
+ConnectedBedroomRGBLEDStrip *ConnectedBedroom::get_RGB_LED_strip_from_communication_id_(int communication_id) const {
+  auto it = std::find_if(RGB_LED_strips_.begin(), RGB_LED_strips_.end(),
+                         [communication_id](const std::pair<int, ConnectedBedroomRGBLEDStrip *> &element) {
+                           return element.first == communication_id;
+                         });
+
+  if (it != RGB_LED_strips_.end()) {
+    return it->second;
+  } else {
+    return nullptr;
+  }
+}
+
+void ConnectedBedroomDevice::set_communication_id(int communication_id) { this->communication_id_ = communication_id; }
+
+void ConnectedBedroomDevice::set_parent(ConnectedBedroom *parent) {
+  this->parent_ = parent;
+
+  this->register_device();
+}
+
 void ConnectedBedroomSwitch::dump_config() { LOG_SWITCH("", "ConnectedBedroomSwitch", this); }
 
-void ConnectedBedroomSwitch::set_communication_id(int communication_id) { this->communication_id_ = communication_id; }
-
-void ConnectedBedroomSwitch::set_parent(ConnectedBedroom *parent) {
-  this->parent_ = parent;
-  this->parent_->add_switch(this->communication_id_, this);
-}
+void ConnectedBedroomSwitch::register_device() { this->parent_->add_switch(this->communication_id_, this); }
 
 void ConnectedBedroomSwitch::write_state(bool state) {
   this->parent_->write('0');
@@ -187,5 +228,57 @@ void ConnectedBedroomSwitch::write_state(bool state) {
   this->parent_->write('\n');
 }
 
+light::LightTraits ConnectedBedroomRGBLEDStrip::get_traits() {
+  auto traits = light::LightTraits();
+  traits.set_supported_color_modes({light::ColorMode::RGB});
+  return traits;
+}
+
+void ConnectedBedroomRGBLEDStrip::write_state(light::LightState *state) {
+  this->parent_->write('0');
+  this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
+  this->parent_->write('0');
+  this->parent_->write('1');
+
+  if (state->get_effect_name() == "None") {
+    this->parent_->write('0');
+
+    float *r_initial;
+    float *g_initial;
+    float *b_initial;
+
+    state->current_values_as_rgb(r_initial, g_initial, b_initial, false);
+
+    int r = mapfloat(*r_initial, 0.0f, 1.0f, 0.0f, 255.0f);
+    int g = mapfloat(*g_initial, 0.0f, 1.0f, 0.0f, 255.0f);
+    int b = mapfloat(*b_initial, 0.0f, 1.0f, 0.0f, 255.0f);
+
+    this->parent_->write_str(addZeros(r, 3).c_str());
+    this->parent_->write_str(addZeros(g, 3).c_str());
+    this->parent_->write_str(addZeros(b, 3).c_str());
+  }
+
+  else if (state->get_effect_name() == "Rainbow") {
+    this->parent_->write('1');
+  }
+
+  else if (state->get_effect_name() == "Soundreact") {
+    this->parent_->write('2');
+  }
+
+  this->parent_->write('\n');
+}
+
+void ConnectedBedroomRGBLEDStrip::register_device() { this->parent_->add_RGB_LED_strip(this->communication_id_, this); }
+
+void ConnectedBedroomRGBLEDStrip::set_light_state_object(light::LightState *light_state) {
+  this->light_state_ = light_state;
+}
+
+light::LightState *ConnectedBedroomRGBLEDStrip::get_light_state_object() { return light_state_; }
+
 }  // namespace connected_bedroom
 }  // namespace esphome
+
+// Se baser sur tuya light
+// Comment update le state ?
