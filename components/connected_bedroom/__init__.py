@@ -82,7 +82,7 @@ async def to_code(config):
         cg.add(switch_.set_parent(var))
         
     for conf in config[CONF_RGB_LED_STRIPS]:
-        var2 = cg.new_Pvariable(conf[CONF_ID])
+        var2 = cg.new_Pvariable(conf[CONF_OUTPUT_ID])
         await light.register_light(var2, conf)
         communication_id = conf[CONF_COMMUNICATION_ID]
         cg.add(var2.set_communication_id(communication_id))
