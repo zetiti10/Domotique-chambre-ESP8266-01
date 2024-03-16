@@ -76,7 +76,7 @@ void ConnectedBedroom::process_message_() {
           sensor::Sensor *analog_sensor = this->get_analog_sensor_from_communication_id_(ID);
 
           if (analog_sensor != nullptr)
-            analog_sensor->publish_state(getIntFromVector(this->receivedMessage_, 5, 4) / 100);
+            analog_sensor->publish_state(float(getIntFromVector(this->receivedMessage_, 5, 4)) / float(100));
 
           else
             break;
@@ -84,7 +84,7 @@ void ConnectedBedroom::process_message_() {
           analog_sensor = this->get_analog_sensor_from_communication_id_(ID + 1);
 
           if (analog_sensor != nullptr)
-            analog_sensor->publish_state(getIntFromVector(this->receivedMessage_, 9, 4) / 100);
+            analog_sensor->publish_state(float(getIntFromVector(this->receivedMessage_, 9, 4)) / float(100));
 
           break;
         }
