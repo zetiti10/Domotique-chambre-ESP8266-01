@@ -1,22 +1,25 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import automation
-from esphome.components import uart, sensor, binary_sensor, switch
+from esphome.components import uart, sensor, binary_sensor, switch, light
 from esphome.const import CONF_ID, CONF_SWITCHES
 
 CODEOWNERS = ["@zetiti10"]
 
 MULTI_CONF = True
 DEPENDENCIES = ['uart']
-AUTO_LOAD = ['sensor', 'binary_sensor', 'switch']
+AUTO_LOAD = ['sensor', 'binary_sensor', 'switch', 'light']
 
-serial_ns = cg.esphome_ns.namespace('connected_bedroom')
+connected_bedroom_ns = cg.esphome_ns.namespace('connected_bedroom')
 
-ConnectedBedroom = serial_ns.class_('ConnectedBedroom', cg.Component, uart.UARTDevice)
-ConnectedBedroomSwitch = serial_ns.class_('ConnectedBedroomSwitch', switch.Switch, cg.Component)
+ConnectedBedroom = connected_bedroom_ns.class_('ConnectedBedroom', cg.Component, uart.UARTDevice)
+ConnectedBedroomDevice = connected_bedroom_ns.class_('ConnectedBedroomDevice')
+ConnectedBedroomSwitch = connected_bedroom_ns.class_('ConnectedBedroomSwitch', switch.Switch, cg.Component, ConnectedBedroomDevice)
+ConnectedBedroomRGBLEDStrip = connected_bedroom_ns.class_('ConnectedBedroomRGBLEDStrip', light.LightOutput, cg.Component, ConnectedBedroomDevice)
 
 CONF_ANALOG_SENSORS = "analog_sensors"
 CONF_BINARY_SENSORS = "binary_sensors"
+CONF_RGB_LED_STRIPS = "RGB_LED_strips"
 CONF_COMMUNICATION_ID = "communication_id"
 
 
@@ -45,6 +48,14 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
                 }
             )
         ),
+        cv.Required(CONF_RGB_LED_STRIPS): cv.ensure_list(
+            light.RGB_LIGHT_SCHEMA.extend(
+                {
+                    cv.GenerateID(): cv.declare_id(ConnectedBedroomRGBLEDStrip),
+                    cv.Required(CONF_COMMUNICATION_ID): cv.positive_int,
+                }
+            )
+        ),
     }
 )
 
@@ -69,3 +80,11 @@ async def to_code(config):
         communication_id = conf[CONF_COMMUNICATION_ID]
         cg.add(switch_.set_communication_id(communication_id))
         cg.add(switch_.set_parent(var))
+        
+    for conf in config[CONF_RGB_LED_STRIPS]:
+        var2 = cg.new_Pvariable(conf[CONF_ID])
+        await light.register_light(var2, conf)
+        communication_id = conf[CONF_COMMUNICATION_ID]
+        cg.add(var2.set_communication_id(communication_id))
+        cg.add(var2.set_parent(var))
+        cg.add(var2.set_light_state_object(conf[CONF_ID]))
