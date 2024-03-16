@@ -21,7 +21,6 @@ class ConnectedBedroom : public Component, public uart::UARTDevice {
   void add_analog_sensor(int communication_id, sensor::Sensor *analog_sensor);
   void add_binary_sensor(int communication_id, binary_sensor::BinarySensor *binary_sensor);
   void add_switch(int communication_id, switch_::Switch *switch_);
-  void add_RGB_LED_strip(int communication_id, ConnectedBedroomRGBLEDStrip *RGB_LED_strip);
 
  protected:
   void process_message_();
@@ -29,14 +28,12 @@ class ConnectedBedroom : public Component, public uart::UARTDevice {
   sensor::Sensor *get_analog_sensor_from_communication_id_(int communication_id) const;
   binary_sensor::BinarySensor *get_binary_sensor_from_communication_id_(int communication_id) const;
   switch_::Switch *get_switch_from_communication_id_(int communication_id) const;
-  ConnectedBedroomRGBLEDStrip *get_RGB_LED_strip_from_communication_id_(int communication_id) const;
 
   std::vector<uint8_t> receivedMessage_;
 
   std::vector<std::pair<int, sensor::Sensor *>> analog_sensors_;
   std::vector<std::pair<int, binary_sensor::BinarySensor *>> binary_sensors_;
   std::vector<std::pair<int, switch_::Switch *>> switches_;
-  std::vector<std::pair<int, ConnectedBedroomRGBLEDStrip *>> RGB_LED_strips_;
 };
 
 class ConnectedBedroomDevice {
@@ -57,19 +54,6 @@ class ConnectedBedroomSwitch : public Component, public switch_::Switch, public 
 
  protected:
   void write_state(bool state) override;
-};
-
-class ConnectedBedroomRGBLEDStrip : public Component, public light::LightOutput, public ConnectedBedroomDevice {
- public:
-  light::LightTraits get_traits() override;
-  void write_state(light::LightState *state);
-
-  void register_device() override;
-  void set_light_state_object(light::LightState *light_state);
-  light::LightState *get_light_state_object();
-
- protected:
-  light::LightState *light_state_;
 };
 
 // Binary light
