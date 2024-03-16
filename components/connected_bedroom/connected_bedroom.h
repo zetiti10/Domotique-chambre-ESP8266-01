@@ -11,8 +11,7 @@ namespace connected_bedroom {
 
 class ConnectedBedroom : public Component, public uart::UARTDevice {
  public:
-  float get_setup_priority() const override { return setup_priority::DATA; }
-  void setup() override;
+  float get_setup_priority() const override;
   void loop() override;
   void dump_config() override;
 
@@ -23,9 +22,9 @@ class ConnectedBedroom : public Component, public uart::UARTDevice {
  protected:
   void process_message_();
 
-  sensor::Sensor *get_analog_sensor_from_communication_id_(int communication_id);
-  binary_sensor::BinarySensor *get_binary_sensor_from_communication_id_(int communication_id);
-  switch_::Switch *get_switch_from_communication_id_(int communication_id);
+  sensor::Sensor *get_analog_sensor_from_communication_id_(int communication_id) const;
+  binary_sensor::BinarySensor *get_binary_sensor_from_communication_id_(int communication_id) const;
+  switch_::Switch *get_switch_from_communication_id_(int communication_id) const;
 
   std::vector<uint8_t> receivedMessage_;
 
@@ -45,7 +44,7 @@ class ConnectedBedroomSwitch : public Component, public switch_::Switch {
   void write_state(bool state) override;
 
   ConnectedBedroom *parent_;
-  int communication_id_{0};
+  int communication_id_;
 };
 
 // Binary light

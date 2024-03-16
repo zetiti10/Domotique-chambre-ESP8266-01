@@ -9,10 +9,8 @@ static const char *TAG = "connected.bedroom";
 std::string addZeros(int number, int length) {
   std::string result = std::to_string(number);
 
-  // Ajouter des zéros au début jusqu'à ce que la longueur soit atteinte
-  while (result.length() < static_cast<size_t>(length)) {
+  while (result.length() < static_cast<size_t>(length))
     result = "0" + result;
-  }
 
   return result;
 }
@@ -26,37 +24,7 @@ int getIntFromVector(std::vector<uint8_t> &string, int position, int lenght) {
   return result;
 }
 
-void ConnectedBedroom::setup() {
-  /*unsigned long initialTime = millis();
-
-  while (!this->available()) {
-    if ((millis() - initialTime) >= 10000) {
-      ESP_LOGE(TAG, "Unable to start communication with the Arduino Mega.");
-      this->mark_failed();
-      return;
-    }
-  }
-
-  delay(UART_WAITING_TIME);
-
-  String receivedMessage;
-  while (this->available() > 0) {
-    char letter = this->read();
-
-    if (letter == '\n')
-      break;
-
-    receivedMessage += letter;
-  }
-
-  if (receivedMessage != "2")
-    ESP_LOGW(TAG, "Received unknow message: %s", receivedMessage);
-
-  // Response.
-  this->write_byte(2);*/
-
-  ESP_LOGD(TAG, "Setup finished");
-}
+float ConnectedBedroom::get_setup_priority() const { return setup_priority::DATA; }
 
 void ConnectedBedroom::loop() {
   while (this->available()) {
@@ -74,10 +42,10 @@ void ConnectedBedroom::loop() {
 }
 
 void ConnectedBedroom::process_message_() {
-  int ID = getIntFromVector(this->receivedMessage_, 1, 2);
-
   switch (getIntFromVector(this->receivedMessage_, 0, 1)) {
     case 1: {
+      int ID = getIntFromVector(this->receivedMessage_, 1, 2);
+
       switch (getIntFromVector(this->receivedMessage_, 3, 2)) {
         case 1: {
           switch_::Switch *switch_ = this->get_switch_from_communication_id_(ID);
@@ -91,6 +59,32 @@ void ConnectedBedroom::process_message_() {
 
           if (binary_sensor != nullptr)
             binary_sensor->publish_state(getIntFromVector(this->receivedMessage_, 5, 1));
+
+          break;
+        }
+
+        case 8: {
+          sensor::Sensor *analog_sensor = this->get_analog_sensor_from_communication_id_(ID);
+
+          if (analog_sensor != nullptr)
+            analog_sensor->publish_state(getIntFromVector(this->receivedMessage_, 5, 4));
+
+          break;
+        }
+
+        case 9: {
+          sensor::Sensor *analog_sensor = this->get_analog_sensor_from_communication_id_(ID);
+
+          if (analog_sensor != nullptr)
+            analog_sensor->publish_state(getIntFromVector(this->receivedMessage_, 5, 4) / 100);
+
+          else
+            break;
+
+          analog_sensor = this->get_analog_sensor_from_communication_id_(ID + 1);
+
+          if (analog_sensor != nullptr)
+            analog_sensor->publish_state(getIntFromVector(this->receivedMessage_, 9, 4) / 100);
 
           break;
         }
@@ -136,9 +130,12 @@ void ConnectedBedroom::add_switch(int communication_id, switch_::Switch *switch_
   this->switches_.push_back(std::make_pair(communication_id, switch_));
 }
 
-sensor::Sensor *ConnectedBedroom::get_analog_sensor_from_communication_id_(int ID) {
+sensor::Sensor *ConnectedBedroom::get_analog_sensor_from_communication_id_(int communication_id) const {
   auto it = std::find_if(analog_sensors_.begin(), analog_sensors_.end(),
-                         [ID](const std::pair<int, sensor::Sensor *> &element) { return element.first == ID; });
+                         [communication_id](const std::pair<int, sensor::Sensor *> &element) {
+                           return element.first == communication_id;
+                         });
+
   if (it != analog_sensors_.end()) {
     return it->second;
   } else {
@@ -146,10 +143,12 @@ sensor::Sensor *ConnectedBedroom::get_analog_sensor_from_communication_id_(int I
   }
 }
 
-binary_sensor::BinarySensor *ConnectedBedroom::get_binary_sensor_from_communication_id_(int ID) {
-  auto it =
-      std::find_if(binary_sensors_.begin(), binary_sensors_.end(),
-                   [ID](const std::pair<int, binary_sensor::BinarySensor *> &element) { return element.first == ID; });
+binary_sensor::BinarySensor *ConnectedBedroom::get_binary_sensor_from_communication_id_(int communication_id) const {
+  auto it = std::find_if(binary_sensors_.begin(), binary_sensors_.end(),
+                         [communication_id](const std::pair<int, binary_sensor::BinarySensor *> &element) {
+                           return element.first == communication_id;
+                         });
+
   if (it != binary_sensors_.end()) {
     return it->second;
   } else {
@@ -157,9 +156,12 @@ binary_sensor::BinarySensor *ConnectedBedroom::get_binary_sensor_from_communicat
   }
 }
 
-switch_::Switch *ConnectedBedroom::get_switch_from_communication_id_(int ID) {
+switch_::Switch *ConnectedBedroom::get_switch_from_communication_id_(int communication_id) const {
   auto it = std::find_if(switches_.begin(), switches_.end(),
-                         [ID](const std::pair<int, switch_::Switch *> &element) { return element.first == ID; });
+                         [communication_id](const std::pair<int, switch_::Switch *> &element) {
+                           return element.first == communication_id;
+                         });
+
   if (it != switches_.end()) {
     return it->second;
   } else {
