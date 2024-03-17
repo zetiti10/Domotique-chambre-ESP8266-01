@@ -27,7 +27,8 @@ int getIntFromVector(std::vector<uint8_t> &string, int position, int lenght) {
 float ConnectedBedroom::get_setup_priority() const { return setup_priority::DATA; }
 
 void ConnectedBedroom::setup() {
-  this->register_service(&esphome::connected_bedroom::ConnectedBedroom::send_message_to_Arduino_, "print_message_on_display", {"title", "message"});
+  this->register_service(&esphome::connected_bedroom::ConnectedBedroom::send_message_to_Arduino_,
+                         "print_message_on_display", {"title", "message"});
 }
 
 void ConnectedBedroom::loop() {
@@ -98,11 +99,8 @@ void ConnectedBedroom::process_message_() {
 
     case 2: {
       std::string message;
-      for (int i = 1; i < this->receivedMessage_.size(); i++) {
+      for (int i = 1; i < this->receivedMessage_.size(); i++)
         message.push_back(this->receivedMessage_[i]);
-      }
-
-      ESP_LOGD(TAG, "Received message: %s", message.c_str());
 
       this->call_homeassistant_service(
           "script.emettre_un_message",
