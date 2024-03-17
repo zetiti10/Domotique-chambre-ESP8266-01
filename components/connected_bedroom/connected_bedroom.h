@@ -5,15 +5,17 @@
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/switch/switch.h"
 #include "esphome/components/uart/uart.h"
+#include "esphome/components/api/custom_api_device.h"
 
 namespace esphome {
 namespace connected_bedroom {
 
 class ConnectedBedroomRGBLEDStrip;
 
-class ConnectedBedroom : public Component, public uart::UARTDevice {
+class ConnectedBedroom : public Component, public uart::UARTDevice, public api::CustomAPIDevice {
  public:
   float get_setup_priority() const override;
+  void setup() override;
   void loop() override;
   void dump_config() override;
 
@@ -23,6 +25,7 @@ class ConnectedBedroom : public Component, public uart::UARTDevice {
 
  protected:
   void process_message_();
+  void send_message_to_Arduino_(std::string title, std::string message);
 
   sensor::Sensor *get_analog_sensor_from_communication_id_(int communication_id) const;
   binary_sensor::BinarySensor *get_binary_sensor_from_communication_id_(int communication_id) const;

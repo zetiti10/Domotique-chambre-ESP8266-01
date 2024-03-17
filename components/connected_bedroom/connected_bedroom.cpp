@@ -26,6 +26,10 @@ int getIntFromVector(std::vector<uint8_t> &string, int position, int lenght) {
 
 float ConnectedBedroom::get_setup_priority() const { return setup_priority::DATA; }
 
+void ConnectedBedroom::setup() {
+  this->register_service(send_message_to_Arduino_, "print_message_on_display", {"title", "message"});
+}
+
 void ConnectedBedroom::loop() {
   while (this->available()) {
     uint8_t letter = this->read();
@@ -91,9 +95,33 @@ void ConnectedBedroom::process_message_() {
       }
       break;
     }
+
+    case 2: {
+      std::string message;
+      for (int i = 1; i < this->receivedMessage_.size(); i++) {
+        message.push_back(this->receivedMessage_[i]);
+      }
+
+      this->call_homeassistant_service(
+          "script.emettre_un_message",
+          {{"message", message}, {"enceinte", "media_player.reveil_google_cast_de_la_chambre_de_louis"}});
+
+      break;
+    }
   }
 
   this->receivedMessage_.clear();
+}
+
+void ConnectedBedroom::send_message_to_Arduino_(std::string title, std::string message) {
+  std::replace(title.begin(), title.end(), '/', '.');
+  std::replace(message.begin(), message.end(), '/', '.');
+
+  this->write('2');
+  this->write_str(title.c_str());
+  this->write('/');
+  this->write_str(message.c_str());
+  this->write('\n');
 }
 
 void ConnectedBedroom::dump_config() {
