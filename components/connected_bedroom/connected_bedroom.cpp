@@ -102,6 +102,8 @@ void ConnectedBedroom::process_message_() {
         message.push_back(this->receivedMessage_[i]);
       }
 
+      ESP_LOGD(TAG, "Received message: %s", message.c_str());
+
       this->call_homeassistant_service(
           "script.emettre_un_message",
           {{"message", message}, {"enceinte", "media_player.reveil_google_cast_de_la_chambre_de_louis"}});
