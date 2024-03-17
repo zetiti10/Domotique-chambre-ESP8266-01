@@ -27,7 +27,7 @@ int getIntFromVector(std::vector<uint8_t> &string, int position, int lenght) {
 float ConnectedBedroom::get_setup_priority() const { return setup_priority::DATA; }
 
 void ConnectedBedroom::setup() {
-  this->register_service(&send_message_to_Arduino_, "print_message_on_display", {"title", "message"});
+  this->register_service(&esphome::connected_bedroom::ConnectedBedroom::send_message_to_Arduino_, "print_message_on_display", {"title", "message"});
 }
 
 void ConnectedBedroom::loop() {
