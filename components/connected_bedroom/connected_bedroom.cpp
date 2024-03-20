@@ -30,12 +30,32 @@ void ConnectedBedroom::setup() {
   this->register_service(&esphome::connected_bedroom::ConnectedBedroom::send_message_to_Arduino_,
                          "print_message_on_display", {"title", "message"});
 
-  this->subscribe_homeassistant_state(&esphome::connected_bedroom::ConnectedBedroom::update_temperature_variable_light_,
-                                      "light.lampe_de_chevet_de_la_chambre_de_louis");
-  this->subscribe_homeassistant_state(&esphome::connected_bedroom::ConnectedBedroom::update_temperature_variable_light_,
-                                      "light.lampe_canape_de_la_chambre_de_louis");
-  this->subscribe_homeassistant_state(&esphome::connected_bedroom::ConnectedBedroom::update_temperature_variable_light_,
-                                      "light.lumiere_plafond_de_la_chambre_de_louis");
+  for (auto light : this->connected_lights_) {
+    std::string &entity_id = *std::get<1>(light);
+
+    this->subscribe_homeassistant_state(&esphome::connected_bedroom::ConnectedBedroom::update_connected_light_state_,
+                                        entity_id);
+
+    switch (std::get<2>(light)) {
+      case TEMPERATURE_VARIABLE_CONNECTED_LIGHT:
+        this->subscribe_homeassistant_state(
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_temperature_, entity_id,
+            "color_temp_kelvin");
+        this->subscribe_homeassistant_state(
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_brightness_, entity_id, "brightness");
+        break;
+
+      case COLOR_VARIABLE_CONNECTED_LIGHT:
+        this->subscribe_homeassistant_state(
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_color_, entity_id, "rgb_color");
+        this->subscribe_homeassistant_state(
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_temperature_, entity_id,
+            "color_temp_kelvin");
+        this->subscribe_homeassistant_state(
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_brightness_, entity_id, "brightness");
+        break;
+    }
+  }
 }
 
 void ConnectedBedroom::loop() {
@@ -55,6 +75,99 @@ void ConnectedBedroom::loop() {
 
 void ConnectedBedroom::process_message_() {
   switch (getIntFromVector(this->receivedMessage_, 0, 1)) {
+    case 0: {
+      int ID = getIntFromVector(this->receivedMessage_, 1, 2);
+
+      switch (getIntFromVector(this->receivedMessage_, 3, 2)) {
+        case 0: {
+          std::string *light = this->get_connected_light_from_communication_id_(ID);
+
+          if (light != nullptr) {
+            switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
+              case 0: {
+                this->call_homeassistant_service("light.turn_on", {{"entity_id", *light}});
+                break;
+              }
+
+              case 1: {
+                this->call_homeassistant_service("light.turn_off", {{"entity_id", *light}});
+                break;
+              }
+
+              case 2: {
+                this->call_homeassistant_service("light.turn_toggle", {{"entity_id", *light}});
+                break;
+              }
+            }
+          }
+
+          break;
+        }
+
+        case 4: {
+          std::string *light = this->get_connected_light_from_communication_id_(ID);
+
+          switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
+            case 0: {
+              this->call_homeassistant_service(
+                  "light.turn_on",
+                  {{"entity_id", *light}, {"kelvin", to_string(getIntFromVector(this->receivedMessage_, 6, 4))}});
+              break;
+            }
+
+            case 1: {
+              this->call_homeassistant_service(
+                  "light.turn_on",
+                  {{"entity_id", *light}, {"brightness", to_string(getIntFromVector(this->receivedMessage_, 6, 3))}});
+              break;
+            }
+          }
+          break;
+        }
+
+        case 5: {
+          std::string *light = this->get_connected_light_from_communication_id_(ID);
+
+          switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
+            case 0: {
+              std::string selected_color;
+
+              selected_color.append("[");
+              selected_color.append(to_string(getIntFromVector(this->receivedMessage_, 6, 3)));
+              selected_color.append(",");
+              selected_color.append(to_string(getIntFromVector(this->receivedMessage_, 9, 3)));
+              selected_color.append(",");
+              selected_color.append(to_string(getIntFromVector(this->receivedMessage_, 12, 3)));
+              selected_color.append(",");
+              selected_color.append("]");
+
+              this->call_homeassistant_service(
+                  "light.turn_on",
+                  {{"entity_id", *light}, {"rgb_color", selected_color}});
+              break;
+            }
+
+            case 1: {
+              this->call_homeassistant_service(
+                  "light.turn_on",
+                  {{"entity_id", *light}, {"kelvin", to_string(getIntFromVector(this->receivedMessage_, 6, 4))}});
+              break;
+            }
+
+            case 2: {
+              this->call_homeassistant_service(
+                  "light.turn_on",
+                  {{"entity_id", *light}, {"brightness", to_string(getIntFromVector(this->receivedMessage_, 6, 3))}});
+              break;
+            }
+          }
+          break;
+        }
+      }
+
+      break;
+    }
+
     case 1: {
       int ID = getIntFromVector(this->receivedMessage_, 1, 2);
 
@@ -131,7 +244,32 @@ void ConnectedBedroom::send_message_to_Arduino_(std::string title, std::string m
   this->write('\n');
 }
 
-void ConnectedBedroom::update_temperature_variable_light_(std::string entity_id, std::string state) {
+void ConnectedBedroom::update_connected_light_state_(std::string entity_id, std::string state) {
+  this->write('1');
+  this->write_str(addZeros(this->get_communication_id_from_connected_light_entity_id_(entity_id), 2).c_str());
+  this->write('0');
+  this->write('1');
+
+  if (state == "on")
+    this->write('1');
+
+  else
+    this->write('0');
+
+  this->write('\n');
+}
+
+void ConnectedBedroom::update_connected_light_brightness_(std::string entity_id, std::string state) {
+  ESP_LOGD(TAG, "Entity id: %s", entity_id.c_str());
+  ESP_LOGD(TAG, "State: %s", state.c_str());
+}
+
+void ConnectedBedroom::update_connected_light_temperature_(std::string entity_id, std::string state) {
+  ESP_LOGD(TAG, "Entity id: %s", entity_id.c_str());
+  ESP_LOGD(TAG, "State: %s", state.c_str());
+}
+
+void ConnectedBedroom::update_connected_light_color_(std::string entity_id, std::string state) {
   ESP_LOGD(TAG, "Entity id: %s", entity_id.c_str());
   ESP_LOGD(TAG, "State: %s", state.c_str());
 }
@@ -170,6 +308,10 @@ void ConnectedBedroom::add_switch(int communication_id, switch_::Switch *switch_
   this->switches_.push_back(std::make_pair(communication_id, switch_));
 }
 
+void ConnectedBedroom::add_connected_light(int communication_id, std::string *entity_id, ConnectedLightTypes type) {
+  this->connected_lights_.push_back(std::make_tuple(communication_id, entity_id, type));
+}
+
 sensor::Sensor *ConnectedBedroom::get_analog_sensor_from_communication_id_(int communication_id) const {
   auto it = std::find_if(analog_sensors_.begin(), analog_sensors_.end(),
                          [communication_id](const std::pair<int, sensor::Sensor *> &element) {
@@ -206,6 +348,32 @@ switch_::Switch *ConnectedBedroom::get_switch_from_communication_id_(int communi
     return it->second;
   } else {
     return nullptr;
+  }
+}
+
+std::string *ConnectedBedroom::get_connected_light_from_communication_id_(int communication_id) const {
+  auto it = std::find_if(connected_lights_.begin(), connected_lights_.end(),
+                         [communication_id](const std::tuple<int, std::string, ConnectedLightTypes> &element) {
+                           return std::get<0>(element) == communication_id;
+                         });
+
+  if (it != connected_lights_.end()) {
+    return std::get<1>(*it);
+  } else {
+    return nullptr;
+  }
+}
+
+int ConnectedBedroom::get_communication_id_from_connected_light_entity_id_(std::string entity_id) const {
+  auto it = std::find_if(connected_lights_.begin(), connected_lights_.end(),
+                         [entity_id](const std::tuple<int, std::string, ConnectedLightTypes> &element) {
+                           return std::get<1>(element) == entity_id;
+                         });
+
+  if (it != connected_lights_.end()) {
+    return std::get<0>(*it);
+  } else {
+    return -1;
   }
 }
 

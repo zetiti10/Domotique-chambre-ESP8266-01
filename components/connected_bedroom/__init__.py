@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import uart, sensor, binary_sensor, switch
-from esphome.const import CONF_ID, CONF_SWITCHES
+from esphome.const import CONF_ID, CONF_SWITCHES, CONF_ENTITY_ID
 
 CODEOWNERS = ["@zetiti10"]
 
@@ -14,10 +14,19 @@ connected_bedroom_ns = cg.esphome_ns.namespace('connected_bedroom')
 ConnectedBedroom = connected_bedroom_ns.class_('ConnectedBedroom', cg.Component, uart.UARTDevice)
 ConnectedBedroomDevice = connected_bedroom_ns.class_('ConnectedBedroomDevice')
 ConnectedBedroomSwitch = connected_bedroom_ns.class_('ConnectedBedroomSwitch', switch.Switch, cg.Component, ConnectedBedroomDevice)
+ConnectedLightTypes = connected_bedroom_ns.enum("ConnectedLightsType")
 
 CONF_ANALOG_SENSORS = "analog_sensors"
 CONF_BINARY_SENSORS = "binary_sensors"
+CONF_CONNECTED_LIGHTS = "connected_lights"
+CONF_CONNECTED_LIGHT_TYPE = "type"
 CONF_COMMUNICATION_ID = "communication_id"
+
+ENUM_CONNECTED_LIGHT_TYPES = {
+    "BINARY_CONNECTED_LIGHT": ConnectedLightTypes.BINARY_CONNECTED_LIGHT,
+    "TEMPERATURE_VARIABLE_CONNECTED_LIGHT": ConnectedLightTypes.TEMPERATURE_VARIABLE_CONNECTED_LIGHT,
+    "COLOR_VARIABLE_CONNECTED_LIGHT": ConnectedLightTypes.COLOR_VARIABLE_CONNECTED_LIGHT,
+}
 
 
 CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
@@ -45,6 +54,15 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
                 }
             )
         ),
+        cv.Required(CONF_CONNECTED_LIGHTS): cv.ensure_list(
+            {
+                cv.Required(CONF_COMMUNICATION_ID): cv.positive_int,
+                cv.Required(CONF_ENTITY_ID): cv.str,
+                cv.Required(CONF_CONNECTED_LIGHT_TYPE): cv.enum(
+                    ENUM_CONNECTED_LIGHT_TYPES, upper=True
+                )
+            }
+        )
     }
 )
 
@@ -69,3 +87,6 @@ async def to_code(config):
         communication_id = conf[CONF_COMMUNICATION_ID]
         cg.add(switch_.set_communication_id(communication_id))
         cg.add(switch_.set_parent(var))
+
+    for conf in config[CONF_CONNECTED_LIGHTS]:
+        cg.add(var.add_connected_light(conf[CONF_COMMUNICATION_ID], conf[CONF_ENTITY_ID]), conf[CONF_CONNECTED_LIGHT_TYPE])
