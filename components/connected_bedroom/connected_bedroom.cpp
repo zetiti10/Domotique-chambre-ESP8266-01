@@ -366,7 +366,7 @@ std::string *ConnectedBedroom::get_connected_light_from_communication_id_(int co
 
 int ConnectedBedroom::get_communication_id_from_connected_light_entity_id_(std::string entity_id) const {
   auto it = std::find_if(connected_lights_.begin(), connected_lights_.end(),
-                         [entity_id](const std::tuple<int, std::string, ConnectedLightTypes> &element) {
+                         [&entity_id](const std::tuple<int, std::string, ConnectedLightTypes> &element) {
                            return std::get<1>(element) == entity_id;
                          });
 
