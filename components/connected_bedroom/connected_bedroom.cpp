@@ -29,43 +29,42 @@ float ConnectedBedroom::get_setup_priority() const { return setup_priority::DATA
 void ConnectedBedroom::setup() {
   this->register_service(&esphome::connected_bedroom::ConnectedBedroom::send_message_to_Arduino_,
                          "print_message_on_display", {"title", "message"});
+
+  for (auto light : this->connected_lights_) {
+    std::string &entity_id = *std::get<1>(light);
+
+    this->subscribe_homeassistant_state(&esphome::connected_bedroom::ConnectedBedroom::update_connected_light_state_,
+                                        entity_id.c_str());
+
+    switch (std::get<2>(light)) {
+      case TEMPERATURE_VARIABLE_CONNECTED_LIGHT:
+        this->subscribe_homeassistant_state(
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_temperature_, entity_id.c_str(),
+            "color_temp_kelvin");
+        this->subscribe_homeassistant_state(
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_brightness_, entity_id.c_str(),
+            "brightness");
+        break;
+
+      case COLOR_VARIABLE_CONNECTED_LIGHT:
+        this->subscribe_homeassistant_state(
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_color_, entity_id.c_str(),
+            "rgb_color");
+        this->subscribe_homeassistant_state(
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_temperature_, entity_id.c_str(),
+            "color_temp_kelvin");
+        this->subscribe_homeassistant_state(
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_brightness_, entity_id.c_str(),
+            "brightness");
+        break;
+
+      case BINARY_CONNECTED_LIGHT:
+        break;
+    }
+  }
 }
 
 void ConnectedBedroom::loop() {
-  if (!registered_ && this->is_connected()) {
-    for (auto light : this->connected_lights_) {
-      std::string &entity_id = *std::get<1>(light);
-
-      this->subscribe_homeassistant_state(&esphome::connected_bedroom::ConnectedBedroom::update_connected_light_state_,
-                                          entity_id.c_str());
-
-      switch (std::get<2>(light)) {
-        case TEMPERATURE_VARIABLE_CONNECTED_LIGHT:
-          this->subscribe_homeassistant_state(
-              &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_temperature_, entity_id.c_str(),
-              "color_temp_kelvin");
-          this->subscribe_homeassistant_state(
-              &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_brightness_, entity_id.c_str(),
-              "brightness");
-          break;
-
-        case COLOR_VARIABLE_CONNECTED_LIGHT:
-          this->subscribe_homeassistant_state(
-              &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_color_, entity_id.c_str(),
-              "rgb_color");
-          this->subscribe_homeassistant_state(
-              &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_temperature_, entity_id.c_str(),
-              "color_temp_kelvin");
-          this->subscribe_homeassistant_state(
-              &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_brightness_, entity_id.c_str(),
-              "brightness");
-          break;
-      }
-    }
-
-    registered_ = true;
-  }
-
   while (this->available()) {
     uint8_t letter = this->read();
 
