@@ -28,7 +28,7 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
   void add_analog_sensor(int communication_id, sensor::Sensor *analog_sensor);
   void add_binary_sensor(int communication_id, binary_sensor::BinarySensor *binary_sensor);
   void add_switch(int communication_id, switch_::Switch *switch_);
-  void add_connected_light(int communication_id, std::string *entity_id, ConnectedLightTypes type);
+  void add_connected_light(int communication_id, std::string entity_id, ConnectedLightTypes type);
 
  protected:
   void process_message_();
