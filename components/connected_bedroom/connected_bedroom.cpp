@@ -34,25 +34,25 @@ void ConnectedBedroom::setup() {
     std::string &entity_id = *std::get<1>(light);
 
     this->subscribe_homeassistant_state(&esphome::connected_bedroom::ConnectedBedroom::update_connected_light_state_,
-                                        entity_id);
+                                        entity_id.c_str());
 
     switch (std::get<2>(light)) {
       case TEMPERATURE_VARIABLE_CONNECTED_LIGHT:
         this->subscribe_homeassistant_state(
-            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_temperature_, entity_id,
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_temperature_, entity_id.c_str(),
             "color_temp_kelvin");
         this->subscribe_homeassistant_state(
-            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_brightness_, entity_id, "brightness");
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_brightness_, entity_id.c_str(), "brightness");
         break;
 
       case COLOR_VARIABLE_CONNECTED_LIGHT:
         this->subscribe_homeassistant_state(
-            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_color_, entity_id, "rgb_color");
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_color_, entity_id.c_str(), "rgb_color");
         this->subscribe_homeassistant_state(
-            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_temperature_, entity_id,
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_temperature_, entity_id.c_str(),
             "color_temp_kelvin");
         this->subscribe_homeassistant_state(
-            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_brightness_, entity_id, "brightness");
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_brightness_, entity_id.c_str(), "brightness");
         break;
     }
   }
