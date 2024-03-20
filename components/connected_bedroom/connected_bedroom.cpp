@@ -132,8 +132,8 @@ void ConnectedBedroom::send_message_to_Arduino_(std::string title, std::string m
 }
 
 void ConnectedBedroom::update_temperature_variable_light_(std::string entity_id, std::string state) {
-  ESP_LOGD(TAG, "Entity id: %s", entity_id);
-  ESP_LOGD(TAG, "State: %s", state);
+  ESP_LOGD(TAG, "Entity id: %s", entity_id.c_str());
+  ESP_LOGD(TAG, "State: %s", state.c_str());
 }
 
 void ConnectedBedroom::dump_config() {
