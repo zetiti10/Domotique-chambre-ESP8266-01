@@ -30,7 +30,7 @@ void ConnectedBedroom::setup() {
   this->register_service(&esphome::connected_bedroom::ConnectedBedroom::send_message_to_Arduino_,
                          "print_message_on_display", {"title", "message"});
 
-  for (auto light : this->connected_lights_) {
+  /*for (auto light : this->connected_lights_) {
     std::string &entity_id = *std::get<1>(light);
 
     this->subscribe_homeassistant_state(&esphome::connected_bedroom::ConnectedBedroom::update_connected_light_state_,
@@ -55,7 +55,7 @@ void ConnectedBedroom::setup() {
             &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_brightness_, entity_id.c_str(), "brightness");
         break;
     }
-  }
+  }*/
 }
 
 void ConnectedBedroom::loop() {
