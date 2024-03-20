@@ -29,6 +29,13 @@ float ConnectedBedroom::get_setup_priority() const { return setup_priority::DATA
 void ConnectedBedroom::setup() {
   this->register_service(&esphome::connected_bedroom::ConnectedBedroom::send_message_to_Arduino_,
                          "print_message_on_display", {"title", "message"});
+
+  this->subscribe_homeassistant_state(&esphome::connected_bedroom::ConnectedBedroom::update_temperature_variable_light_,
+                                      "light.lampe_de_chevet_de_la_chambre_de_louis");
+  this->subscribe_homeassistant_state(&esphome::connected_bedroom::ConnectedBedroom::update_temperature_variable_light_,
+                                      "light.lampe_canape_de_la_chambre_de_louis");
+  this->subscribe_homeassistant_state(&esphome::connected_bedroom::ConnectedBedroom::update_temperature_variable_light_,
+                                      "light.lumiere_plafond_de_la_chambre_de_louis");
 }
 
 void ConnectedBedroom::loop() {
@@ -122,6 +129,11 @@ void ConnectedBedroom::send_message_to_Arduino_(std::string title, std::string m
   this->write('/');
   this->write_str(message.c_str());
   this->write('\n');
+}
+
+void ConnectedBedroom::update_temperature_variable_light_(std::string entity_id, std::string state) {
+  ESP_LOGD(TAG, "Entity id: %s", entity_id);
+  ESP_LOGD(TAG, "State: %s", state);
 }
 
 void ConnectedBedroom::dump_config() {

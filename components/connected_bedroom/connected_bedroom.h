@@ -26,6 +26,7 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
  protected:
   void process_message_();
   void send_message_to_Arduino_(std::string title, std::string message);
+  void update_temperature_variable_light_(std::string entity_id, std::string state);
 
   sensor::Sensor *get_analog_sensor_from_communication_id_(int communication_id) const;
   binary_sensor::BinarySensor *get_binary_sensor_from_communication_id_(int communication_id) const;
