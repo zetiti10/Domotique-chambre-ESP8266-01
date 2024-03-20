@@ -50,6 +50,8 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
   std::vector<std::pair<int, binary_sensor::BinarySensor *>> binary_sensors_;
   std::vector<std::pair<int, switch_::Switch *>> switches_;
   std::vector<std::tuple<int, std::string *, ConnectedLightTypes>> connected_lights_;
+  
+  bool registered_{false};
 };
 
 class ConnectedBedroomDevice {
