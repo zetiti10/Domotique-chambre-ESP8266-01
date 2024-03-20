@@ -57,7 +57,7 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
         cv.Required(CONF_CONNECTED_LIGHTS): cv.ensure_list(
             {
                 cv.Required(CONF_COMMUNICATION_ID): cv.positive_int,
-                cv.Required(CONF_ENTITY_ID): cv.str,
+                cv.Required(CONF_ENTITY_ID): cv.string,
                 cv.Required(CONF_CONNECTED_LIGHT_TYPE): cv.enum(
                     ENUM_CONNECTED_LIGHT_TYPES, upper=True
                 )
