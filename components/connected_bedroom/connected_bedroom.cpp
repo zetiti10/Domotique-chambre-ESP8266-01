@@ -314,7 +314,7 @@ void ConnectedBedroom::add_connected_light(int communication_id, std::string ent
 
 sensor::Sensor *ConnectedBedroom::get_analog_sensor_from_communication_id_(int communication_id) const {
   auto it = std::find_if(analog_sensors_.begin(), analog_sensors_.end(),
-                         [&communication_id](const std::pair<int, sensor::Sensor *> &element) {
+                         [&communication_id](const auto &element) {
                            return element.first == communication_id;
                          });
 
@@ -327,7 +327,7 @@ sensor::Sensor *ConnectedBedroom::get_analog_sensor_from_communication_id_(int c
 
 binary_sensor::BinarySensor *ConnectedBedroom::get_binary_sensor_from_communication_id_(int communication_id) const {
   auto it = std::find_if(binary_sensors_.begin(), binary_sensors_.end(),
-                         [&communication_id](const std::pair<int, binary_sensor::BinarySensor *> &element) {
+                         [&communication_id](const auto &element) {
                            return element.first == communication_id;
                          });
 
@@ -340,7 +340,7 @@ binary_sensor::BinarySensor *ConnectedBedroom::get_binary_sensor_from_communicat
 
 switch_::Switch *ConnectedBedroom::get_switch_from_communication_id_(int communication_id) const {
   auto it = std::find_if(switches_.begin(), switches_.end(),
-                         [&communication_id](const std::pair<int, switch_::Switch *> &element) {
+                         [&communication_id](const auto &element) {
                            return element.first == communication_id;
                          });
 
@@ -353,7 +353,7 @@ switch_::Switch *ConnectedBedroom::get_switch_from_communication_id_(int communi
 
 std::string *ConnectedBedroom::get_connected_light_from_communication_id_(int communication_id) const {
   auto it = std::find_if(connected_lights_.begin(), connected_lights_.end(),
-                         [&communication_id](const std::tuple<int, std::string, ConnectedLightTypes> &element) {
+                         [communication_id](const auto &element) {
                            return std::get<0>(element) == communication_id;
                          });
 
@@ -366,7 +366,7 @@ std::string *ConnectedBedroom::get_connected_light_from_communication_id_(int co
 
 int ConnectedBedroom::get_communication_id_from_connected_light_entity_id_(std::string entity_id) const {
   auto it = std::find_if(connected_lights_.begin(), connected_lights_.end(),
-                         [&entity_id](const std::tuple<int, std::string, ConnectedLightTypes> &element) {
+                         [&entity_id](const auto &element) {
                            return std::get<1>(element) == entity_id;
                          });
 
