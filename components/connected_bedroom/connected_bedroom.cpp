@@ -285,7 +285,7 @@ void ConnectedBedroom::update_connected_light_brightness_(std::string entity_id,
       break;
   }
 
-  this->write_str(addZeros(std::stoi(state), 3));
+  this->write_str(addZeros(std::stoi(state), 3).c_str());
 
   this->write('\n');
 }
