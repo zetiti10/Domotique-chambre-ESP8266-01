@@ -261,8 +261,30 @@ void ConnectedBedroom::update_connected_light_state_(std::string entity_id, std:
 }
 
 void ConnectedBedroom::update_connected_light_brightness_(std::string entity_id, std::string state) {
-  ESP_LOGD(TAG, "Entity id: %s", entity_id.c_str());
-  ESP_LOGD(TAG, "State: %s", state.c_str());
+  this->write('1');
+
+  int id = this->get_communication_id_from_connected_light_entity_id_(entity_id);
+  this->write_str(addZeros(id, 2).c_str());
+  
+  switch (this->get_type_from_connected_light_communication_id(id)) {
+    case TEMPERATURE_VARIABLE_CONNECTED_LIGHT: {
+      this->write('0');
+      this->write('5');
+      this->write('3');
+      break;
+    }
+
+    case COLOR_VARIABLE_CONNECTED_LIGHT: {
+      this->write('0');
+      this->write('6');
+      this->write('4');
+      break;
+    }
+  }
+
+  this->write(addZeros(int(state), 3));
+
+  this->write('\n');
 }
 
 void ConnectedBedroom::update_connected_light_temperature_(std::string entity_id, std::string state) {
@@ -375,6 +397,19 @@ int ConnectedBedroom::get_communication_id_from_connected_light_entity_id_(std::
     return std::get<0>(*it);
   } else {
     return -1;
+  }
+}
+
+ConnectedLightTypes ConnectedBedroom::get_type_from_connected_light_communication_id(int communication_id) const {
+  auto it = std::find_if(connected_lights_.begin(), connected_lights_.end(),
+                         [communication_id](const std::tuple<int, std::string, ConnectedLightTypes> &element) {
+                           return std::get<0>(element) == communication_id;
+                         });
+
+  if (it != connected_lights_.end()) {
+    return std::get<2>(*it);
+  } else {
+    return "";
   }
 }
 

@@ -43,6 +43,7 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
   switch_::Switch *get_switch_from_communication_id_(int communication_id) const;
   std::string get_connected_light_from_communication_id_(int communication_id) const;
   int get_communication_id_from_connected_light_entity_id_(std::string entity_id) const;
+  ConnectedLightTypes get_type_from_connected_light_communication_id(int communication_id) const;
 
   std::vector<uint8_t> receivedMessage_;
 
