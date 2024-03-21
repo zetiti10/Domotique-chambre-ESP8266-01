@@ -33,28 +33,30 @@ void ConnectedBedroom::setup() {
   for (auto light : this->connected_lights_) {
     std::string &entity_id = *std::get<1>(light);
 
+    ESP_LOGD(TAG, "Adding connected device: %s.", entity_id.c_str());
+
     this->subscribe_homeassistant_state(&esphome::connected_bedroom::ConnectedBedroom::update_connected_light_state_,
-                                        entity_id.c_str());
+                                        entity_id);
 
     switch (std::get<2>(light)) {
       case TEMPERATURE_VARIABLE_CONNECTED_LIGHT:
         this->subscribe_homeassistant_state(
-            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_temperature_, entity_id.c_str(),
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_temperature_, entity_id,
             "color_temp_kelvin");
         this->subscribe_homeassistant_state(
-            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_brightness_, entity_id.c_str(),
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_brightness_, entity_id,
             "brightness");
         break;
 
       case COLOR_VARIABLE_CONNECTED_LIGHT:
         this->subscribe_homeassistant_state(
-            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_color_, entity_id.c_str(),
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_color_, entity_id,
             "rgb_color");
         this->subscribe_homeassistant_state(
-            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_temperature_, entity_id.c_str(),
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_temperature_, entity_id,
             "color_temp_kelvin");
         this->subscribe_homeassistant_state(
-            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_brightness_, entity_id.c_str(),
+            &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_brightness_, entity_id,
             "brightness");
         break;
 
