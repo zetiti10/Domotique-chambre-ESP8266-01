@@ -261,6 +261,9 @@ void ConnectedBedroom::update_connected_light_state_(std::string entity_id, std:
 }
 
 void ConnectedBedroom::update_connected_light_brightness_(std::string entity_id, std::string state) {
+  if (state == "None")
+    return;
+
   this->write('1');
 
   int id = this->get_communication_id_from_connected_light_entity_id_(entity_id);
