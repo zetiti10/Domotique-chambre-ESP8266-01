@@ -41,7 +41,7 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
   sensor::Sensor *get_analog_sensor_from_communication_id_(int communication_id) const;
   binary_sensor::BinarySensor *get_binary_sensor_from_communication_id_(int communication_id) const;
   switch_::Switch *get_switch_from_communication_id_(int communication_id) const;
-  std::string *get_connected_light_from_communication_id_(int communication_id) const;
+  std::string get_connected_light_from_communication_id_(int communication_id) const;
   int get_communication_id_from_connected_light_entity_id_(std::string entity_id) const;
 
   std::vector<uint8_t> receivedMessage_;
@@ -49,7 +49,7 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
   std::vector<std::pair<int, sensor::Sensor *>> analog_sensors_;
   std::vector<std::pair<int, binary_sensor::BinarySensor *>> binary_sensors_;
   std::vector<std::pair<int, switch_::Switch *>> switches_;
-  std::vector<std::tuple<int, std::string *, ConnectedLightTypes>> connected_lights_;
+  std::vector<std::tuple<int, std::string, ConnectedLightTypes>> connected_lights_;
 };
 
 class ConnectedBedroomDevice {

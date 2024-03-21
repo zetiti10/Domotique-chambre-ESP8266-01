@@ -31,9 +31,7 @@ void ConnectedBedroom::setup() {
                          "print_message_on_display", {"title", "message"});
 
   for (auto light : this->connected_lights_) {
-    //std::string &entity_id = *std::get<1>(light);
-
-    std::string entity_id = "light.lampe_de_chevet_de_la_chambre_de_louis";
+    std::string &entity_id = std::get<1>(light);
 
     this->subscribe_homeassistant_state(&esphome::connected_bedroom::ConnectedBedroom::update_connected_light_state_,
                                         entity_id);
@@ -85,22 +83,22 @@ void ConnectedBedroom::process_message_() {
 
       switch (getIntFromVector(this->receivedMessage_, 3, 2)) {
         case 0: {
-          std::string *light = this->get_connected_light_from_communication_id_(ID);
+          std::string light = this->get_connected_light_from_communication_id_(ID);
 
-          if (light != nullptr) {
+          if (light != "") {
             switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
               case 0: {
-                this->call_homeassistant_service("light.turn_on", {{"entity_id", *light}});
+                this->call_homeassistant_service("light.turn_on", {{"entity_id", light}});
                 break;
               }
 
               case 1: {
-                this->call_homeassistant_service("light.turn_off", {{"entity_id", *light}});
+                this->call_homeassistant_service("light.turn_off", {{"entity_id", light}});
                 break;
               }
 
               case 2: {
-                this->call_homeassistant_service("light.turn_toggle", {{"entity_id", *light}});
+                this->call_homeassistant_service("light.turn_toggle", {{"entity_id", light}});
                 break;
               }
             }
@@ -110,20 +108,20 @@ void ConnectedBedroom::process_message_() {
         }
 
         case 4: {
-          std::string *light = this->get_connected_light_from_communication_id_(ID);
+          std::string light = this->get_connected_light_from_communication_id_(ID);
 
           switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
             case 0: {
               this->call_homeassistant_service(
                   "light.turn_on",
-                  {{"entity_id", *light}, {"kelvin", to_string(getIntFromVector(this->receivedMessage_, 6, 4))}});
+                  {{"entity_id", light}, {"kelvin", to_string(getIntFromVector(this->receivedMessage_, 6, 4))}});
               break;
             }
 
             case 1: {
               this->call_homeassistant_service(
                   "light.turn_on",
-                  {{"entity_id", *light}, {"brightness", to_string(getIntFromVector(this->receivedMessage_, 6, 3))}});
+                  {{"entity_id", light}, {"brightness", to_string(getIntFromVector(this->receivedMessage_, 6, 3))}});
               break;
             }
           }
@@ -131,7 +129,7 @@ void ConnectedBedroom::process_message_() {
         }
 
         case 5: {
-          std::string *light = this->get_connected_light_from_communication_id_(ID);
+          std::string light = this->get_connected_light_from_communication_id_(ID);
 
           switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
             case 0: {
@@ -146,21 +144,21 @@ void ConnectedBedroom::process_message_() {
               selected_color.append(",");
               selected_color.append("]");
 
-              this->call_homeassistant_service("light.turn_on", {{"entity_id", *light}, {"rgb_color", selected_color}});
+              this->call_homeassistant_service("light.turn_on", {{"entity_id", light}, {"rgb_color", selected_color}});
               break;
             }
 
             case 1: {
               this->call_homeassistant_service(
                   "light.turn_on",
-                  {{"entity_id", *light}, {"kelvin", to_string(getIntFromVector(this->receivedMessage_, 6, 4))}});
+                  {{"entity_id", light}, {"kelvin", to_string(getIntFromVector(this->receivedMessage_, 6, 4))}});
               break;
             }
 
             case 2: {
               this->call_homeassistant_service(
                   "light.turn_on",
-                  {{"entity_id", *light}, {"brightness", to_string(getIntFromVector(this->receivedMessage_, 6, 3))}});
+                  {{"entity_id", light}, {"brightness", to_string(getIntFromVector(this->receivedMessage_, 6, 3))}});
               break;
             }
           }
@@ -312,7 +310,7 @@ void ConnectedBedroom::add_switch(int communication_id, switch_::Switch *switch_
 }
 
 void ConnectedBedroom::add_connected_light(int communication_id, std::string entity_id, ConnectedLightTypes type) {
-  this->connected_lights_.push_back(std::make_tuple(communication_id, &entity_id, type));
+  this->connected_lights_.push_back(std::make_tuple(communication_id, entity_id, type));
 }
 
 sensor::Sensor *ConnectedBedroom::get_analog_sensor_from_communication_id_(int communication_id) const {
@@ -354,7 +352,7 @@ switch_::Switch *ConnectedBedroom::get_switch_from_communication_id_(int communi
   }
 }
 
-std::string *ConnectedBedroom::get_connected_light_from_communication_id_(int communication_id) const {
+std::string ConnectedBedroom::get_connected_light_from_communication_id_(int communication_id) const {
   auto it = std::find_if(connected_lights_.begin(), connected_lights_.end(),
                          [communication_id](const std::tuple<int, std::string *, ConnectedLightTypes> &element) {
                            return std::get<0>(element) == communication_id;
@@ -363,7 +361,7 @@ std::string *ConnectedBedroom::get_connected_light_from_communication_id_(int co
   if (it != connected_lights_.end()) {
     return std::get<1>(*it);
   } else {
-    return nullptr;
+    return "";
   }
 }
 
