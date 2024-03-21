@@ -246,6 +246,9 @@ void ConnectedBedroom::send_message_to_Arduino_(std::string title, std::string m
 }
 
 void ConnectedBedroom::update_connected_light_state_(std::string entity_id, std::string state) {
+  if (state == "None")
+    return;
+
   this->write('1');
   this->write_str(addZeros(this->get_communication_id_from_connected_light_entity_id_(entity_id), 2).c_str());
   this->write('0');
@@ -294,8 +297,36 @@ void ConnectedBedroom::update_connected_light_brightness_(std::string entity_id,
 }
 
 void ConnectedBedroom::update_connected_light_temperature_(std::string entity_id, std::string state) {
-  ESP_LOGD(TAG, "Entity id: %s", entity_id.c_str());
-  ESP_LOGD(TAG, "State: %s", state.c_str());
+  if (state == "None")
+    return;
+
+  this->write('1');
+
+  int id = this->get_communication_id_from_connected_light_entity_id_(entity_id);
+  this->write_str(addZeros(id, 2).c_str());
+  
+  switch (this->get_type_from_connected_light_communication_id(id)) {
+    case TEMPERATURE_VARIABLE_CONNECTED_LIGHT: {
+      this->write('0');
+      this->write('5');
+      this->write('2');
+      break;
+    }
+
+    case COLOR_VARIABLE_CONNECTED_LIGHT: {
+      this->write('0');
+      this->write('6');
+      this->write('3');
+      break;
+    }
+
+    case BINARY_CONNECTED_LIGHT:
+      break;
+  }
+
+  this->write_str(addZeros(std::stoi(state), 4).c_str());
+
+  this->write('\n');
 }
 
 void ConnectedBedroom::update_connected_light_color_(std::string entity_id, std::string state) {
