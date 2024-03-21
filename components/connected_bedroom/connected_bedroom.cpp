@@ -280,9 +280,12 @@ void ConnectedBedroom::update_connected_light_brightness_(std::string entity_id,
       this->write('4');
       break;
     }
+
+    case BINARY_CONNECTED_LIGHT:
+      break;
   }
 
-  this->write(addZeros(int(state), 3));
+  this->write(addZeros(std::stoi(state), 3));
 
   this->write('\n');
 }
@@ -409,7 +412,7 @@ ConnectedLightTypes ConnectedBedroom::get_type_from_connected_light_communicatio
   if (it != connected_lights_.end()) {
     return std::get<2>(*it);
   } else {
-    return "";
+    return BINARY_CONNECTED_LIGHT;
   }
 }
 
