@@ -354,7 +354,7 @@ switch_::Switch *ConnectedBedroom::get_switch_from_communication_id_(int communi
 
 std::string ConnectedBedroom::get_connected_light_from_communication_id_(int communication_id) const {
   auto it = std::find_if(connected_lights_.begin(), connected_lights_.end(),
-                         [communication_id](const std::tuple<int, std::string *, ConnectedLightTypes> &element) {
+                         [communication_id](const std::tuple<int, std::string, ConnectedLightTypes> &element) {
                            return std::get<0>(element) == communication_id;
                          });
 
@@ -367,8 +367,8 @@ std::string ConnectedBedroom::get_connected_light_from_communication_id_(int com
 
 int ConnectedBedroom::get_communication_id_from_connected_light_entity_id_(std::string entity_id) const {
   auto it = std::find_if(connected_lights_.begin(), connected_lights_.end(),
-                         [entity_id](const std::tuple<int, std::string *, ConnectedLightTypes> &element) {
-                           return *std::get<1>(element) == entity_id;
+                         [entity_id](const std::tuple<int, std::string, ConnectedLightTypes> &element) {
+                           return std::get<1>(element) == entity_id;
                          });
 
   if (it != connected_lights_.end()) {
