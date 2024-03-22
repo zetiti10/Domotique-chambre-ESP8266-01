@@ -374,12 +374,12 @@ void ConnectedBedroom::dump_config() {
     LOG_SWITCH(TAG, "", sens.second);
   }
 
-  ESP_LOGCONFIG(TAG, "Connected lights");
+  /*ESP_LOGCONFIG(TAG, "Connected lights");
   for (auto light : this->connected_lights_) {
     ESP_LOGCONFIG(TAG, "Entity id: %s", std::get<1>(light));
     ESP_LOGCONFIG(TAG, "Communication id: %d", std::get<0>(light));
     ESP_LOGCONFIG(TAG, "Type: %d", std::get<2>(light));
-  }
+  }*/
 }
 
 void ConnectedBedroom::add_analog_sensor(int communication_id, sensor::Sensor *analog_sensor) {
