@@ -1,5 +1,6 @@
 #include "connected_bedroom.h"
 #include "esphome/core/log.h"
+#include <sstream>
 
 namespace esphome {
 namespace connected_bedroom {
@@ -271,7 +272,7 @@ void ConnectedBedroom::update_connected_light_brightness_(std::string entity_id,
 
   int id = this->get_communication_id_from_connected_light_entity_id_(entity_id);
   this->write_str(addZeros(id, 2).c_str());
-  
+
   switch (this->get_type_from_connected_light_communication_id(id)) {
     case TEMPERATURE_VARIABLE_CONNECTED_LIGHT: {
       this->write('0');
@@ -304,7 +305,7 @@ void ConnectedBedroom::update_connected_light_temperature_(std::string entity_id
 
   int id = this->get_communication_id_from_connected_light_entity_id_(entity_id);
   this->write_str(addZeros(id, 2).c_str());
-  
+
   switch (this->get_type_from_connected_light_communication_id(id)) {
     case TEMPERATURE_VARIABLE_CONNECTED_LIGHT: {
       this->write('0');
@@ -330,8 +331,26 @@ void ConnectedBedroom::update_connected_light_temperature_(std::string entity_id
 }
 
 void ConnectedBedroom::update_connected_light_color_(std::string entity_id, std::string state) {
-  ESP_LOGD(TAG, "Entity id: %s", entity_id.c_str());
-  ESP_LOGD(TAG, "State: %s", state.c_str());
+  if (state == "None")
+    return;
+
+  this->write('1');
+
+  int id = this->get_communication_id_from_connected_light_entity_id_(entity_id);
+  this->write_str(addZeros(id, 2).c_str());
+
+  this->write('0');
+  this->write('6');
+  this->write('2');
+
+  std::istringstream ss(state);
+  char discard;
+  int r, g, b;
+  ss >> discard >> r >> discard >> g >> discard >> b >> discard;
+
+  this->write_str(addZeros(r, 3).c_str());
+  this->write_str(addZeros(g, 3).c_str());
+  this->write_str(addZeros(b, 3).c_str());
 }
 
 void ConnectedBedroom::dump_config() {
@@ -339,20 +358,27 @@ void ConnectedBedroom::dump_config() {
 
   ESP_LOGCONFIG(TAG, "Analog sensors");
   for (auto sens : this->analog_sensors_) {
-    ESP_LOGCONFIG(TAG, "Communication id : %d", sens.first);
+    ESP_LOGCONFIG(TAG, "Communication id: %d", sens.first);
     LOG_SENSOR(TAG, "", sens.second);
   }
 
   ESP_LOGCONFIG(TAG, "Binary sensors");
   for (auto sens : this->binary_sensors_) {
-    ESP_LOGCONFIG(TAG, "Communication id : %d", sens.first);
+    ESP_LOGCONFIG(TAG, "Communication id: %d", sens.first);
     LOG_BINARY_SENSOR(TAG, "", sens.second);
   }
 
   ESP_LOGCONFIG(TAG, "Switches");
   for (auto sens : this->switches_) {
-    ESP_LOGCONFIG(TAG, "Communication id : %d", sens.first);
+    ESP_LOGCONFIG(TAG, "Communication id: %d", sens.first);
     LOG_SWITCH(TAG, "", sens.second);
+  }
+
+  ESP_LOGCONFIG(TAG, "Connected lights");
+  for (auto light : this->connected_lights_) {
+    ESP_LOGCONFIG(TAG, "Entity id: %s", std::get<1>(light));
+    ESP_LOGCONFIG(TAG, "Communication id: %d", std::get<0>(light));
+    ESP_LOGCONFIG(TAG, "Type: %d", std::get<2>(light));
   }
 }
 
