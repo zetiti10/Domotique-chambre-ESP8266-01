@@ -348,9 +348,13 @@ void ConnectedBedroom::update_connected_light_color_(std::string entity_id, std:
   int r, g, b;
   ss >> discard >> r >> discard >> g >> discard >> b >> discard;
 
+  ESP_LOGD(TAG, "R: %d, G: %d, B: %d", r, g, b);
+
   this->write_str(addZeros(r, 3).c_str());
   this->write_str(addZeros(g, 3).c_str());
   this->write_str(addZeros(b, 3).c_str());
+
+  this->write('\n');
 }
 
 void ConnectedBedroom::dump_config() {
