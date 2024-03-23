@@ -121,14 +121,14 @@ void ConnectedBedroom::process_message_() {
             case 0: {
               this->call_homeassistant_service(
                   "light.turn_on",
-                  {{"entity_id", light}, {"kelvin", to_string(getIntFromVector(this->receivedMessage_, 6, 4)).c_str()}});
+                  {{"entity_id", light}, {"kelvin", to_string(getIntFromVector(this->receivedMessage_, 6, 4))}});
               break;
             }
 
             case 1: {
               this->call_homeassistant_service(
                   "light.turn_on",
-                  {{"entity_id", light}, {"brightness", to_string(getIntFromVector(this->receivedMessage_, 6, 3)).c_str()}});
+                  {{"entity_id", light}, {"brightness", to_string(getIntFromVector(this->receivedMessage_, 6, 3))}});
               break;
             }
           }
@@ -150,21 +150,21 @@ void ConnectedBedroom::process_message_() {
               selected_color.append(to_string(getIntFromVector(this->receivedMessage_, 12, 3)));
               selected_color.append("]");
 
-              this->call_homeassistant_service("light.turn_on", {{"entity_id", light}, {"rgb_color", /*selected_color.c_str()*/"[255, 0, 100]"}});
+              this->call_homeassistant_service("light.turn_on", {{"entity_id", light}, {"data_template.rgb_color", selected_color}});
               break;
             }
 
             case 1: {
               this->call_homeassistant_service(
                   "light.turn_on",
-                  {{"entity_id", light}, {"kelvin", to_string(getIntFromVector(this->receivedMessage_, 6, 4)).c_str()}});
+                  {{"entity_id", light}, {"kelvin", to_string(getIntFromVector(this->receivedMessage_, 6, 4))}});
               break;
             }
 
             case 2: {
               this->call_homeassistant_service(
                   "light.turn_on",
-                  {{"entity_id", light}, {"brightness", to_string(getIntFromVector(this->receivedMessage_, 6, 3)).c_str()}});
+                  {{"entity_id", light}, {"brightness", to_string(getIntFromVector(this->receivedMessage_, 6, 3))}});
               break;
             }
           }
