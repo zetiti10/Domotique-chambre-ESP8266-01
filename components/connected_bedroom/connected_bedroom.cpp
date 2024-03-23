@@ -150,7 +150,7 @@ void ConnectedBedroom::process_message_() {
               selected_color.append(to_string(getIntFromVector(this->receivedMessage_, 12, 3)));
               selected_color.append("]");
 
-              this->call_homeassistant_service("light.turn_on", {{"entity_id", light}, {"rgb_color", selected_color.c_str()}});
+              this->call_homeassistant_service("light.turn_on", {{"entity_id", light}, {"rgb_color", /*selected_color.c_str()*/"[255, 0, 100]"}});
               break;
             }
 
