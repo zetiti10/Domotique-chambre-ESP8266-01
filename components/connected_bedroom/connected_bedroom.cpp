@@ -19,8 +19,14 @@ std::string addZeros(int number, int length) {
 int getIntFromVector(std::vector<uint8_t> &string, int position, int lenght) {
   int result = 0;
 
-  for (int i = 0; i < lenght; i++)
-    result += (string[position + i] - '0') * pow(10, ((lenght - i) - 1));
+  for (int i = 0; i < lenght; i++) {
+    int power = 1;
+
+    for (int j = 0; j < ((lenght - i) - 1); j++)
+      power *= 10;
+
+    result += (string[position + i] - '0') * power;
+  }
 
   return result;
 }
@@ -80,8 +86,7 @@ void ConnectedBedroom::loop() {
 void ConnectedBedroom::process_message_() {
   std::string message;
 
-  for (int i = 0; i < receivedMessage_.size(); i ++)
-  {
+  for (int i = 0; i < receivedMessage_.size(); i++) {
     message += receivedMessage_[i];
   }
 
