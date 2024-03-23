@@ -80,15 +80,20 @@ void ConnectedBedroom::loop() {
 void ConnectedBedroom::process_message_() {
   switch (getIntFromVector(this->receivedMessage_, 0, 1)) {
     case 0: {
+      ESP_LOGD(TAG, "Action demandée");
+
       int ID = getIntFromVector(this->receivedMessage_, 1, 2);
 
       switch (getIntFromVector(this->receivedMessage_, 3, 2)) {
         case 0: {
+          ESP_LOGD(TAG, "Gestion de l'alimentation");
           std::string light = this->get_connected_light_from_communication_id_(ID);
+          ESP_LOGD(TAG, "Nome : %s", light.c_str());
 
           if (light != "") {
             switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
               case 0: {
+                ESP_LOGD(TAG, "Allumer");
                 this->call_homeassistant_service("light.turn_on", {{"entity_id", light}});
                 break;
               }
