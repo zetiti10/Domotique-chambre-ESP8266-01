@@ -84,12 +84,6 @@ void ConnectedBedroom::loop() {
 }
 
 void ConnectedBedroom::process_message_() {
-  std::string message;
-
-  for (int i = 0; i < receivedMessage_.size(); i++) {
-    message += receivedMessage_[i];
-  }
-
   switch (getIntFromVector(this->receivedMessage_, 0, 1)) {
     case 0: {
       int ID = getIntFromVector(this->receivedMessage_, 1, 2);
@@ -99,7 +93,6 @@ void ConnectedBedroom::process_message_() {
           std::string light = this->get_connected_light_from_communication_id_(ID);
 
           if (light != "") {
-
             switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
               case 0: {
                 this->call_homeassistant_service("light.turn_off", {{"entity_id", light}});
@@ -107,7 +100,7 @@ void ConnectedBedroom::process_message_() {
               }
 
               case 1: {
-                this->call_homeassistant_service("light.turn_off", {{"entity_id", light}});
+                this->call_homeassistant_service("light.turn_on", {{"entity_id", light}});
                 break;
               }
 
@@ -151,12 +144,13 @@ void ConnectedBedroom::process_message_() {
 
               selected_color.append("[");
               selected_color.append(to_string(getIntFromVector(this->receivedMessage_, 6, 3)));
-              selected_color.append(",");
+              selected_color.append(", ");
               selected_color.append(to_string(getIntFromVector(this->receivedMessage_, 9, 3)));
-              selected_color.append(",");
+              selected_color.append(", ");
               selected_color.append(to_string(getIntFromVector(this->receivedMessage_, 12, 3)));
-              selected_color.append(",");
               selected_color.append("]");
+
+              ESP_LOGD(TAG, "Selected color: %s", selected_color);
 
               this->call_homeassistant_service("light.turn_on", {{"entity_id", light}, {"rgb_color", selected_color}});
               break;
@@ -360,8 +354,6 @@ void ConnectedBedroom::update_connected_light_color_(std::string entity_id, std:
   char discard;
   int r, g, b;
   ss >> discard >> r >> discard >> g >> discard >> b >> discard;
-
-  ESP_LOGD(TAG, "R: %d, G: %d, B: %d", r, g, b);
 
   this->write_str(addZeros(r, 3).c_str());
   this->write_str(addZeros(g, 3).c_str());
