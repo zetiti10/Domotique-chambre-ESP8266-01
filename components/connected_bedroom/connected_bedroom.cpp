@@ -88,9 +88,10 @@ void ConnectedBedroom::process_message_() {
         case 0: {
           ESP_LOGD(TAG, "Gestion de l'alimentation");
           std::string light = this->get_connected_light_from_communication_id_(ID);
-          ESP_LOGD(TAG, "Nome : %s", light.c_str());
+          ESP_LOGD(TAG, "Nom : %s", light.c_str());
 
           if (light != "") {
+            ESP_LOGD(TAG, "Lumiere ok");
             switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
               case 0: {
                 ESP_LOGD(TAG, "Allumer");
@@ -105,6 +106,11 @@ void ConnectedBedroom::process_message_() {
 
               case 2: {
                 this->call_homeassistant_service("light.turn_toggle", {{"entity_id", light}});
+                break;
+              }
+
+              default: {
+                ESP_LOGD(TAG, "Autre");
                 break;
               }
             }
