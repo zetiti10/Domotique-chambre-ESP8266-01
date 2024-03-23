@@ -78,42 +78,37 @@ void ConnectedBedroom::loop() {
 }
 
 void ConnectedBedroom::process_message_() {
+  std::string message;
+
+  for (int i = 0; i < receivedMessage_.size(); i ++)
+  {
+    message += receivedMessage_[i];
+  }
+
+  ESP_LOGD(TAG, "Got message: %s", message.c_str());
+
   switch (getIntFromVector(this->receivedMessage_, 0, 1)) {
     case 0: {
-      ESP_LOGD(TAG, "Action demandée");
-
       int ID = getIntFromVector(this->receivedMessage_, 1, 2);
 
       switch (getIntFromVector(this->receivedMessage_, 3, 2)) {
         case 0: {
-          ESP_LOGD(TAG, "Gestion de l'alimentation");
           std::string light = this->get_connected_light_from_communication_id_(ID);
-          ESP_LOGD(TAG, "Nom : %s", light.c_str());
 
           if (light != "") {
-            ESP_LOGD(TAG, "Lumiere ok");
-            ESP_LOGD(TAG, "Longueur : %i", this->receivedMessage_.size());
             switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
               case 0: {
-                ESP_LOGD(TAG, "Allumer");
                 this->call_homeassistant_service("light.turn_on", {{"entity_id", light}});
                 break;
               }
 
               case 1: {
-                ESP_LOGD(TAG, "Eteindre");
                 this->call_homeassistant_service("light.turn_off", {{"entity_id", light}});
                 break;
               }
 
               case 2: {
-                ESP_LOGD(TAG, "Basculer");
                 this->call_homeassistant_service("light.turn_toggle", {{"entity_id", light}});
-                break;
-              }
-
-              default: {
-                ESP_LOGD(TAG, "Autre");
                 break;
               }
             }
