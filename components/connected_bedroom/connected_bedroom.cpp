@@ -90,12 +90,6 @@ void ConnectedBedroom::process_message_() {
     message += receivedMessage_[i];
   }
 
-  ESP_LOGD(TAG, "Got message: %s", message.c_str());
-  ESP_LOGD(TAG, "Message type: %d", getIntFromVector(this->receivedMessage_, 0, 1));
-  ESP_LOGD(TAG, "Device ID: %d", getIntFromVector(this->receivedMessage_, 1, 2));
-  ESP_LOGD(TAG, "Command: %d", getIntFromVector(this->receivedMessage_, 3, 2));
-  ESP_LOGD(TAG, "Parameter: %d", getIntFromVector(this->receivedMessage_, 5, 1));
-
   switch (getIntFromVector(this->receivedMessage_, 0, 1)) {
     case 0: {
       int ID = getIntFromVector(this->receivedMessage_, 1, 2);
@@ -105,18 +99,27 @@ void ConnectedBedroom::process_message_() {
           std::string light = this->get_connected_light_from_communication_id_(ID);
 
           if (light != "") {
+            ESP_LOGD(TAG, "Got message: %s", message.c_str());
+            ESP_LOGD(TAG, "Message type: %d", getIntFromVector(this->receivedMessage_, 0, 1));
+            ESP_LOGD(TAG, "Device ID: %d", getIntFromVector(this->receivedMessage_, 1, 2));
+            ESP_LOGD(TAG, "Command: %d", getIntFromVector(this->receivedMessage_, 3, 2));
+            ESP_LOGD(TAG, "Parameter: %d", getIntFromVector(this->receivedMessage_, 5, 1));
+
             switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
               case 0: {
+                ESP_LOGD(TAG, "Allumé");
                 this->call_homeassistant_service("light.turn_on", {{"entity_id", light}});
                 break;
               }
 
               case 1: {
+                ESP_LOGD(TAG, "Éteint");
                 this->call_homeassistant_service("light.turn_off", {{"entity_id", light}});
                 break;
               }
 
               case 2: {
+                ESP_LOGD(TAG, "Basculé");
                 this->call_homeassistant_service("light.turn_toggle", {{"entity_id", light}});
                 break;
               }
