@@ -140,17 +140,11 @@ void ConnectedBedroom::process_message_() {
 
           switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
             case 0: {
-              std::string selected_color;
-
-              selected_color.append("[");
-              selected_color.append(to_string(getIntFromVector(this->receivedMessage_, 6, 3)));
-              selected_color.append(", ");
-              selected_color.append(to_string(getIntFromVector(this->receivedMessage_, 9, 3)));
-              selected_color.append(", ");
-              selected_color.append(to_string(getIntFromVector(this->receivedMessage_, 12, 3)));
-              selected_color.append("]");
-
-              this->call_homeassistant_service("light.turn_on", {{"entity_id", light}, {"data_template.rgb_color", selected_color}});
+              this->call_homeassistant_service("script.esphome_changer_de_couleur",
+                                               {{"lumiere", light},
+                                                {"r", to_string(getIntFromVector(this->receivedMessage_, 6, 3))},
+                                                {"g", to_string(getIntFromVector(this->receivedMessage_, 9, 3))},
+                                                {"b", to_string(getIntFromVector(this->receivedMessage_, 12, 3))}});
               break;
             }
 
