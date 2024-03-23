@@ -91,6 +91,10 @@ void ConnectedBedroom::process_message_() {
   }
 
   ESP_LOGD(TAG, "Got message: %s", message.c_str());
+  ESP_LOGD(TAG, "Message type: %d", getIntFromVector(this->receivedMessage_, 0, 1));
+  ESP_LOGD(TAG, "Device ID: %d", getIntFromVector(this->receivedMessage_, 1, 2));
+  ESP_LOGD(TAG, "Command: %d", getIntFromVector(this->receivedMessage_, 3, 2));
+  ESP_LOGD(TAG, "Parameter: %d", getIntFromVector(this->receivedMessage_, 5, 1));
 
   switch (getIntFromVector(this->receivedMessage_, 0, 1)) {
     case 0: {
