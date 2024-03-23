@@ -92,6 +92,7 @@ void ConnectedBedroom::process_message_() {
 
           if (light != "") {
             ESP_LOGD(TAG, "Lumiere ok");
+            ESP_LOGD(TAG, "Longueur : %i", this->receivedMessage_.size());
             switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
               case 0: {
                 ESP_LOGD(TAG, "Allumer");
@@ -100,11 +101,13 @@ void ConnectedBedroom::process_message_() {
               }
 
               case 1: {
+                ESP_LOGD(TAG, "Eteindre");
                 this->call_homeassistant_service("light.turn_off", {{"entity_id", light}});
                 break;
               }
 
               case 2: {
+                ESP_LOGD(TAG, "Basculer");
                 this->call_homeassistant_service("light.turn_toggle", {{"entity_id", light}});
                 break;
               }
