@@ -609,15 +609,11 @@ void ConnectedBedroomAlarmControlPanel::control(const alarm_control_panel::Alarm
     this->parent_->write('0');
   }
 
-  else if (call.get_state() == alarm_control_panel::ACP_STATE_TRIGGERED &&
+  else if (call.get_state() == alarm_control_panel::ACP_STATE_PENDING &&
            this->current_state_ != alarm_control_panel::ACP_STATE_TRIGGERED) {
     this->parent_->write('0');
     this->parent_->write('2');
     this->parent_->write('1');
-  }
-
-  else {
-    ESP_LOGE(TAG, "State not yet implemented: %s", LOG_STR_ARG(alarm_control_panel_state_to_string(*call.get_state())));
   }
 
   this->parent_->write('\n');
