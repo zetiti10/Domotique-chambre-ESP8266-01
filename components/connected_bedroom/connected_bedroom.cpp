@@ -177,7 +177,41 @@ void ConnectedBedroom::process_message_() {
           switch_::Switch *switch_ = this->get_switch_from_communication_id_(ID);
 
           if (switch_ != nullptr)
+          {
             switch_->publish_state(getIntFromVector(this->receivedMessage_, 5, 1));
+
+            break;
+          }
+
+          alarm_control_panel::AlarmControlPanel *alarm = this->get_alarm_from_communication_id_(ID);
+
+          if (alarm != nullptr)
+          {
+            if (getIntFromVector(this->receivedMessage_, 5, 1) == 0)
+              alarm->publish_state(alarm_control_panel::ACP_STATE_DISARMED);
+
+            else if (getIntFromVector(this->receivedMessage_, 5, 1) == 1)
+              alarm->publish_state(alarm_control_panel::ACP_STATE_ARMED_AWAY);
+
+            break;
+          }
+
+          break;
+        }
+
+        case 3: {
+          alarm_control_panel::AlarmControlPanel *alarm = this->get_alarm_from_communication_id_(ID);
+
+          if (alarm == nullptr)
+            break;
+
+          if (getIntFromVector(this->receivedMessage_, 5, 1) == 0)
+            alarm->publish_state(alarm_control_panel::ACP_STATE_ARMED_AWAY);
+
+          else if (getIntFromVector(this->receivedMessage_, 5, 1) == 1)
+            alarm->publish_state(alarm_control_panel::ACP_STATE_TRIGGERED);
+
+          break;
         }
 
         case 7: {
@@ -375,6 +409,11 @@ void ConnectedBedroom::dump_config() {
     LOG_SWITCH(TAG, "", sens.second);
   }
 
+  ESP_LOGCONFIG(TAG, "Alarms");
+  for (auto sens : this->alarms_) {
+    ESP_LOGCONFIG(TAG, "Communication id: %d", sens.first);
+  }
+
   ESP_LOGCONFIG(TAG, "Connected lights");
   for (auto light : this->connected_lights_) {
     ESP_LOGCONFIG(TAG, "Entity id: %s", std::get<1>(light).c_str());
@@ -392,6 +431,10 @@ void ConnectedBedroom::add_binary_sensor(int communication_id, binary_sensor::Bi
 
 void ConnectedBedroom::add_switch(int communication_id, switch_::Switch *switch_) {
   this->switches_.push_back(std::make_pair(communication_id, switch_));
+}
+
+void ConnectedBedroom::add_alarm(int communication_id, alarm_control_panel::AlarmControlPanel *alarm) {
+  this->alarms_.push_back(std::make_pair(communication_id, alarm));
 }
 
 void ConnectedBedroom::add_connected_light(int communication_id, std::string entity_id, ConnectedLightTypes type) {
@@ -431,6 +474,19 @@ switch_::Switch *ConnectedBedroom::get_switch_from_communication_id_(int communi
                          });
 
   if (it != switches_.end()) {
+    return it->second;
+  } else {
+    return nullptr;
+  }
+}
+
+alarm_control_panel::AlarmControlPanel *ConnectedBedroom::get_alarm_from_communication_id_(int communication_id) const {
+  auto it = std::find_if(alarms_.begin(), alarms_.end(),
+                         [communication_id](const std::pair<int, alarm_control_panel::AlarmControlPanel *> &element) {
+                           return element.first == communication_id;
+                         });
+
+  if (it != alarms_.end()) {
     return it->second;
   } else {
     return nullptr;
@@ -494,6 +550,74 @@ void ConnectedBedroomSwitch::write_state(bool state) {
   this->parent_->write('0');
   this->parent_->write('0');
   this->parent_->write(state ? '1' : '0');
+  this->parent_->write('\n');
+}
+
+void ConnectedBedroomAlarmControlPanel::dump_config() {
+  ESP_LOGCONFIG(TAG, "ConnectedBedroomAlarmControlPanel");
+  ESP_LOGCONFIG(TAG, "  Current State: %s", LOG_STR_ARG(alarm_control_panel_state_to_string(this->current_state_)));
+  ESP_LOGCONFIG(TAG, "  Number of Codes: %u", this->codes_.size());
+  if (!this->codes_.empty())
+    ESP_LOGCONFIG(TAG, "  Requires Code To Arm: %s", YESNO(this->get_requires_code_to_arm()));
+  ESP_LOGCONFIG(TAG, "  Supported Features: %" PRIu32, this->get_supported_features());
+}
+
+void ConnectedBedroomAlarmControlPanel::register_device() { this->parent_->add_alarm(this->communication_id_, this); }
+
+uint32_t ConnectedBedroomAlarmControlPanel::get_supported_features() const {
+  uint32_t features = alarm_control_panel::ACP_FEAT_ARM_AWAY | alarm_control_panel::ACP_FEAT_TRIGGER;
+  return features;
+}
+
+bool ConnectedBedroomAlarmControlPanel::get_requires_code() const { return !this->codes_.empty(); }
+
+bool ConnectedBedroomAlarmControlPanel::get_requires_code_to_arm() const { return true; }
+
+void ConnectedBedroomAlarmControlPanel::add_code(const std::string &code) { this->codes_.push_back(code); }
+
+void ConnectedBedroomAlarmControlPanel::control(const alarm_control_panel::AlarmControlPanelCall &call) {
+  if (!call.get_state())
+    return;
+
+  if (!this->codes_.empty()) {
+    if (!call.get_code().has_value())
+      return;
+
+    if (!(std::count(this->codes_.begin(), this->codes_.end(), call.get_code().value()) == 1))
+      return;
+  }
+
+  this->parent_->write('0');
+  this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
+
+  if (call.get_state() == alarm_control_panel::ACP_STATE_ARMED_AWAY &&
+      this->current_state_ == alarm_control_panel::ACP_STATE_DISARMED) {
+    this->parent_->write('0');
+    this->parent_->write('0');
+    this->parent_->write('1');
+  }
+
+  else if (call.get_state() == alarm_control_panel::ACP_STATE_ARMED_AWAY &&
+           this->current_state_ == alarm_control_panel::ACP_STATE_TRIGGERED) {
+    this->parent_->write('0');
+    this->parent_->write('2');
+    this->parent_->write('0');
+  }
+
+  else if (call.get_state() == alarm_control_panel::ACP_STATE_DISARMED &&
+           this->current_state_ != alarm_control_panel::ACP_STATE_DISARMED) {
+    this->parent_->write('0');
+    this->parent_->write('0');
+    this->parent_->write('0');
+  }
+
+  else if (call.get_state() == alarm_control_panel::ACP_STATE_TRIGGERED &&
+           this->current_state_ != alarm_control_panel::ACP_STATE_TRIGGERED) {
+    this->parent_->write('0');
+    this->parent_->write('2');
+    this->parent_->write('1');
+  }
+
   this->parent_->write('\n');
 }
 

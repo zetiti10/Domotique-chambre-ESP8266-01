@@ -1,6 +1,6 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import uart, sensor, binary_sensor, switch
+from esphome.components import uart, sensor, binary_sensor, switch, alarm_control_panel
 from esphome.const import CONF_ID, CONF_SWITCHES, CONF_ENTITY_ID
 
 CODEOWNERS = ["@zetiti10"]
@@ -14,10 +14,13 @@ connected_bedroom_ns = cg.esphome_ns.namespace('connected_bedroom')
 ConnectedBedroom = connected_bedroom_ns.class_('ConnectedBedroom', cg.Component, uart.UARTDevice)
 ConnectedBedroomDevice = connected_bedroom_ns.class_('ConnectedBedroomDevice')
 ConnectedBedroomSwitch = connected_bedroom_ns.class_('ConnectedBedroomSwitch', switch.Switch, cg.Component, ConnectedBedroomDevice)
+ConnectedBedroomAlarmControlPanel = connected_bedroom_ns.class_('ConnectedBedroomAlarmControlPanel', alarm_control_panel.AlarmControlPanel, cg.Component, ConnectedBedroomDevice)
 ConnectedLightTypes = connected_bedroom_ns.enum("ConnectedLightsType")
 
 CONF_ANALOG_SENSORS = "analog_sensors"
 CONF_BINARY_SENSORS = "binary_sensors"
+CONF_ALARMS = "alarms"
+CONF_CODES = "codes"
 CONF_CONNECTED_LIGHTS = "connected_lights"
 CONF_CONNECTED_LIGHT_TYPE = "type"
 CONF_COMMUNICATION_ID = "communication_id"
@@ -32,21 +35,21 @@ ENUM_CONNECTED_LIGHT_TYPES = {
 CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
     {
         cv.GenerateID(): cv.declare_id(ConnectedBedroom),
-        cv.Required(CONF_ANALOG_SENSORS): cv.ensure_list(
+        cv.Optional(CONF_ANALOG_SENSORS): cv.ensure_list(
             sensor.SENSOR_SCHEMA.extend(
                 {
                     cv.Required(CONF_COMMUNICATION_ID): cv.positive_int,
                 }
             )
         ),
-        cv.Required(CONF_BINARY_SENSORS): cv.ensure_list(
+        cv.Optional(CONF_BINARY_SENSORS): cv.ensure_list(
             binary_sensor.BINARY_SENSOR_SCHEMA.extend(
                 {
                     cv.Required(CONF_COMMUNICATION_ID): cv.positive_int,
                 }
             )
         ),
-        cv.Required(CONF_SWITCHES): cv.ensure_list(
+        cv.Optional(CONF_SWITCHES): cv.ensure_list(
             switch.SWITCH_SCHEMA.extend(
                 {
                     cv.GenerateID(): cv.declare_id(ConnectedBedroomSwitch),
@@ -54,7 +57,16 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
                 }
             )
         ),
-        cv.Required(CONF_CONNECTED_LIGHTS): cv.ensure_list(
+        cv.Optional(CONF_ALARMS): cv.ensure_list(
+            alarm_control_panel.ALARM_CONTROL_PANEL_SCHEMA.extend(
+                {
+                    cv.GenerateID(): cv.declare_id(ConnectedBedroomAlarmControlPanel),
+                    cv.Optional(CONF_CODES): cv.ensure_list(cv.string_strict),
+                    cv.Required(CONF_COMMUNICATION_ID): cv.positive_int,
+                }
+            )
+        ),
+        cv.Optional(CONF_CONNECTED_LIGHTS): cv.ensure_list(
             {
                 cv.Required(CONF_COMMUNICATION_ID): cv.positive_int,
                 cv.Required(CONF_ENTITY_ID): cv.string,
@@ -87,6 +99,17 @@ async def to_code(config):
         communication_id = conf[CONF_COMMUNICATION_ID]
         cg.add(switch_.set_communication_id(communication_id))
         cg.add(switch_.set_parent(var))
+
+    for conf in config[CONF_ALARMS]:
+        alarm_var = cg.new_Pvariable(conf[CONF_ID])
+        await cg.register_component(alarm_var, conf)
+        await alarm_control_panel.register_alarm_control_panel(alarm_var, conf)
+        communication_id = conf[CONF_COMMUNICATION_ID]
+        cg.add(alarm_var.set_communication_id(communication_id))
+        cg.add(alarm_var.set_parent(var))
+        if CONF_CODES in config:
+            for acode in conf[CONF_CODES]:
+                cg.add(alarm_var.add_code(acode))
 
     for conf in config[CONF_CONNECTED_LIGHTS]:
         cg.add(var.add_connected_light(conf[CONF_COMMUNICATION_ID], conf[CONF_ENTITY_ID], conf[CONF_CONNECTED_LIGHT_TYPE]))
