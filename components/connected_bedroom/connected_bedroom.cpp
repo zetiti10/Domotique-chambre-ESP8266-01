@@ -574,8 +574,6 @@ bool ConnectedBedroomAlarmControlPanel::get_requires_code_to_arm() const { retur
 void ConnectedBedroomAlarmControlPanel::add_code(const std::string &code) { this->codes_.push_back(code); }
 
 void ConnectedBedroomAlarmControlPanel::control(const alarm_control_panel::AlarmControlPanelCall &call) {
-  ESP_LOGD(TAG, "Call received with state %d", call.get_state());  // A ENLEVER.
-
   if (!call.get_state())
     return;
 
@@ -616,6 +614,10 @@ void ConnectedBedroomAlarmControlPanel::control(const alarm_control_panel::Alarm
     this->parent_->write('0');
     this->parent_->write('2');
     this->parent_->write('1');
+  }
+
+  else {
+    ESP_LOGE(TAG, "State not yet implemented: %s", LOG_STR_ARG(alarm_control_panel_state_to_string(*call.get_state())));
   }
 
   this->parent_->write('\n');
