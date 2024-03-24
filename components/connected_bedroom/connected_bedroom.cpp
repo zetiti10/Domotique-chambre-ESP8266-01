@@ -574,7 +574,7 @@ bool ConnectedBedroomAlarmControlPanel::get_requires_code_to_arm() const { retur
 void ConnectedBedroomAlarmControlPanel::add_code(const std::string &code) { this->codes_.push_back(code); }
 
 void ConnectedBedroomAlarmControlPanel::control(const alarm_control_panel::AlarmControlPanelCall &call) {
-  ESP_LOGD(TAG, "Call received with state %s", call.get_state());  // A ENLEVER.
+  ESP_LOGD(TAG, "Call received with state %d", call.get_state());  // A ENLEVER.
 
   if (!call.get_state())
     return;
