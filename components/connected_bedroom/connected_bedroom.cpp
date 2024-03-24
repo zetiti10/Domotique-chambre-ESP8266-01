@@ -176,8 +176,7 @@ void ConnectedBedroom::process_message_() {
         case 1: {
           switch_::Switch *switch_ = this->get_switch_from_communication_id_(ID);
 
-          if (switch_ != nullptr)
-          {
+          if (switch_ != nullptr) {
             switch_->publish_state(getIntFromVector(this->receivedMessage_, 5, 1));
 
             break;
@@ -185,8 +184,7 @@ void ConnectedBedroom::process_message_() {
 
           alarm_control_panel::AlarmControlPanel *alarm = this->get_alarm_from_communication_id_(ID);
 
-          if (alarm != nullptr)
-          {
+          if (alarm != nullptr) {
             if (getIntFromVector(this->receivedMessage_, 5, 1) == 0)
               alarm->publish_state(alarm_control_panel::ACP_STATE_DISARMED);
 
@@ -573,9 +571,14 @@ bool ConnectedBedroomAlarmControlPanel::get_requires_code() const { return !this
 
 bool ConnectedBedroomAlarmControlPanel::get_requires_code_to_arm() const { return true; }
 
-void ConnectedBedroomAlarmControlPanel::add_code(const std::string &code) { this->codes_.push_back(code); }
+void ConnectedBedroomAlarmControlPanel::add_code(const std::string &code) {
+  ESP_LOGD(TAG, "Adding code %s", code);  // A ENLEVER.
+  this->codes_.push_back(code);
+}
 
 void ConnectedBedroomAlarmControlPanel::control(const alarm_control_panel::AlarmControlPanelCall &call) {
+  ESP_LOGD(TAG, "Call received with state %d and code %s", call.get_state(), call.get_code());  // A ENLEVER.
+
   if (!call.get_state())
     return;
 
