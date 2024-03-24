@@ -576,10 +576,6 @@ void ConnectedBedroomAlarmControlPanel::add_code(const std::string &code) {
 }
 
 void ConnectedBedroomAlarmControlPanel::control(const alarm_control_panel::AlarmControlPanelCall &call) {
-  ESP_LOGD(TAG, "Code list lenght %d", codes_.size()); // A ENLEVER.
-
-  ESP_LOGD(TAG, "Call received with state %d and code %s", call.get_state(), call.get_code());  // A ENLEVER.
-
   if (!call.get_state())
     return;
 

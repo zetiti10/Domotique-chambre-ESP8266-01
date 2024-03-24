@@ -107,7 +107,7 @@ async def to_code(config):
         communication_id = conf[CONF_COMMUNICATION_ID]
         cg.add(alarm_var.set_communication_id(communication_id))
         cg.add(alarm_var.set_parent(var))
-        if CONF_CODES in config:
+        if CONF_CODES in conf:
             for acode in conf[CONF_CODES]:
                 cg.add(alarm_var.add_code(acode))
 
