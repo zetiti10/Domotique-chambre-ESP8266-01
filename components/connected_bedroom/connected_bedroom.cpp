@@ -572,11 +572,12 @@ bool ConnectedBedroomAlarmControlPanel::get_requires_code() const { return !this
 bool ConnectedBedroomAlarmControlPanel::get_requires_code_to_arm() const { return true; }
 
 void ConnectedBedroomAlarmControlPanel::add_code(const std::string &code) {
-  ESP_LOGD(TAG, "Adding code %s", code);  // A ENLEVER.
   this->codes_.push_back(code);
 }
 
 void ConnectedBedroomAlarmControlPanel::control(const alarm_control_panel::AlarmControlPanelCall &call) {
+  ESP_LOGD(TAG, "Code list lenght %d", codes_.size()); // A ENLEVER.
+
   ESP_LOGD(TAG, "Call received with state %d and code %s", call.get_state(), call.get_code());  // A ENLEVER.
 
   if (!call.get_state())
