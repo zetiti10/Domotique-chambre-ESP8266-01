@@ -7,7 +7,7 @@ CODEOWNERS = ["@zetiti10"]
 
 MULTI_CONF = True
 DEPENDENCIES = ['uart']
-AUTO_LOAD = ['sensor', 'binary_sensor', 'switch']
+AUTO_LOAD = ['sensor', 'binary_sensor', 'switch', 'alarm_control_panel']
 
 connected_bedroom_ns = cg.esphome_ns.namespace('connected_bedroom')
 
