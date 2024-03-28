@@ -754,5 +754,7 @@ void ConnectedBedroomTelevision::dump_config() { ESP_LOGCONFIG(TAG, "ConnectedBe
 
 void ConnectedBedroomTelevision::register_device() { this->parent_->add_television(this->communication_id_, this); }
 
+void ConnectedBedroomTelevision::setVolumeSensor(sensor::Sensor *sens) { this->volume = sens; }
+
 }  // namespace connected_bedroom
 }  // namespace esphome

@@ -159,7 +159,8 @@ async def to_code(config):
         cg.add(volume_up_button.set_parent(television_var))
         volume_down_button = await button.new_button(conf[CONF_VOLUME_DOWN_BUTTON])
         cg.add(volume_down_button.set_parent(television_var))
-        await sensor.new_sensor(conf[CONF_VOLUME_STATE])
+        volume = await sensor.new_sensor(conf[CONF_VOLUME_STATE])
+        cg.add(television_var.setVolumeSensor(volume))
 
     for conf in config[CONF_CONNECTED_LIGHTS]:
         cg.add(var.add_connected_light(conf[CONF_COMMUNICATION_ID], conf[CONF_ENTITY_ID], conf[CONF_CONNECTED_LIGHT_TYPE]))

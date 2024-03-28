@@ -142,6 +142,8 @@ class ConnectedBedroomTelevision : public Component, public ConnectedBedroomDevi
   void dump_config() override;
   void register_device() override;
 
+  void setVolumeSensor(sensor::Sensor *sens);
+
   TelevisionState *state;
   TelevisionMuted *muted;
   TelevisionVolumeUp *volume_up;
