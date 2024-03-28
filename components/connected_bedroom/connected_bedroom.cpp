@@ -202,10 +202,15 @@ void ConnectedBedroom::process_message_() {
             break;
           }
 
+          ESP_LOGD(TAG, "La ça va 1");
+
           ConnectedBedroomTelevision *television = this->get_television_from_communication_id_(ID);
+          ESP_LOGD(TAG, "La ça va 2");
 
           if (television != nullptr) {
+            ESP_LOGD(TAG, "La ça va 3");
             television->state->publish_state(getIntFromVector(this->receivedMessage_, 5, 1));
+            ESP_LOGD(TAG, "La ça va 4");
 
             break;
           }
