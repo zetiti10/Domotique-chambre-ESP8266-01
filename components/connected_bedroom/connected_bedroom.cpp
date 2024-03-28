@@ -84,7 +84,6 @@ void ConnectedBedroom::loop() {
     else
       this->receivedMessage_.push_back(letter);
 
-    
     ESP_LOGD(TAG, "Ca passe");
   }
 }
@@ -691,7 +690,10 @@ void ConnectedBedroomAlarmControlPanel::control(const alarm_control_panel::Alarm
   this->parent_->write('\n');
 }
 
-void TelevisionState::set_parent(ConnectedBedroomTelevision *parent) { this->parent_ = parent; }
+void TelevisionState::set_parent(ConnectedBedroomTelevision *parent) {
+  this->parent_ = parent;
+  this->parent_->state = this;
+}
 
 void TelevisionState::write_state(bool state) {
   this->parent_->parent_->write('0');
@@ -702,7 +704,10 @@ void TelevisionState::write_state(bool state) {
   this->parent_->parent_->write('\n');
 }
 
-void TelevisionMuted::set_parent(ConnectedBedroomTelevision *parent) { this->parent_ = parent; }
+void TelevisionMuted::set_parent(ConnectedBedroomTelevision *parent) {
+  this->parent_ = parent;
+  this->parent_->muted = this;
+}
 
 void TelevisionMuted::write_state(bool state) {
   this->parent_->parent_->write('0');
@@ -713,7 +718,10 @@ void TelevisionMuted::write_state(bool state) {
   this->parent_->parent_->write('\n');
 }
 
-void TelevisionVolumeUp::set_parent(ConnectedBedroomTelevision *parent) { this->parent_ = parent; }
+void TelevisionVolumeUp::set_parent(ConnectedBedroomTelevision *parent) {
+  this->parent_ = parent;
+  this->parent_->volume_up = this;
+}
 
 void TelevisionVolumeUp::press_action() {
   ESP_LOGD(TAG, "Début de l'augmentation du volume.");
@@ -728,7 +736,10 @@ void TelevisionVolumeUp::press_action() {
   ESP_LOGD(TAG, "Fin de l'augmentation du volume.");
 }
 
-void TelevisionVolumeDown::set_parent(ConnectedBedroomTelevision *parent) { this->parent_ = parent; }
+void TelevisionVolumeDown::set_parent(ConnectedBedroomTelevision *parent) {
+  this->parent_ = parent;
+  this->parent_->volume_down = this;
+}
 
 void TelevisionVolumeDown::press_action() {
   this->parent_->parent_->write('0');
