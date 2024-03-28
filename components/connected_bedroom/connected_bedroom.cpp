@@ -84,6 +84,14 @@ void ConnectedBedroom::loop() {
 }
 
 void ConnectedBedroom::process_message_() {
+  ESP_LOGD(TAG, "Début du processMessage");
+
+  String message;
+  for (int i = 0; i < receivedMessage_.size(); i++) {
+    message += receivedMessage_[i];
+  }
+  ESP_LOGD(TAG, "Message reçu : %s", message.c_str());
+
   switch (getIntFromVector(this->receivedMessage_, 0, 1)) {
     case 0: {
       int ID = getIntFromVector(this->receivedMessage_, 1, 2);
@@ -296,6 +304,8 @@ void ConnectedBedroom::process_message_() {
       break;
     }
   }
+
+  ESP_LOGD(TAG, "Fin du processMessage");
 
   this->receivedMessage_.clear();
 }
@@ -720,9 +730,7 @@ void TelevisionVolumeDown::press_action() {
 
 void ConnectedBedroomTelevision::dump_config() { ESP_LOGCONFIG(TAG, "ConnectedBedroomTelevision"); }
 
-void ConnectedBedroomTelevision::register_device() {
-  this->parent_->add_television(this->communication_id_, this);
-}
+void ConnectedBedroomTelevision::register_device() { this->parent_->add_television(this->communication_id_, this); }
 
 }  // namespace connected_bedroom
 }  // namespace esphome
