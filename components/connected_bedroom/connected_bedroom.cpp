@@ -31,6 +31,14 @@ int getIntFromVector(std::vector<uint8_t> &string, int position, int lenght) {
   return result;
 }
 
+long map(long x, long in_min, long in_max, long out_min, long out_max) {
+  const long dividend = out_max - out_min;
+  const long divisor = in_max - in_min;
+  const long delta = x - in_min;
+
+  return (delta * dividend + (divisor / 2)) / divisor + out_min;
+}
+
 float ConnectedBedroom::get_setup_priority() const { return setup_priority::DATA; }
 
 void ConnectedBedroom::setup() {
@@ -228,7 +236,7 @@ void ConnectedBedroom::process_message_() {
 
         case 4: {
           ConnectedBedroomMediaPlayer *television =
-              dynamic_cast<ConnectedBedroomMediaPlayer *>(this->get_television_from_communication_id(ID));
+              static_cast<ConnectedBedroomMediaPlayer *>(this->get_television_from_communication_id(ID));
 
           if (television == nullptr)
             break;
@@ -247,12 +255,12 @@ void ConnectedBedroom::process_message_() {
               television->publish_state();
               break;
             }
-          }
 
-          case 2: {
-            television->muted_ = false;
-            television->publish_state();
-            break;
+            case 2: {
+              television->muted_ = false;
+              television->publish_state();
+              break;
+            }
           }
 
           break;
