@@ -155,9 +155,9 @@ async def to_code(config):
         cg.add(state_switch.set_parent(television_var))
         mute_switch = await switch.new_switch(conf[CONF_MUTE_SWITCH])
         cg.add(mute_switch.set_parent(television_var))
-        volume_up_button = await switch.new_switch(conf[CONF_VOLUME_UP_BUTTON])
+        volume_up_button = await button.new_button(conf[CONF_VOLUME_UP_BUTTON])
         cg.add(volume_up_button.set_parent(television_var))
-        volume_down_button = await switch.new_switch(conf[CONF_VOLUME_DOWN_BUTTON])
+        volume_down_button = await button.new_button(conf[CONF_VOLUME_DOWN_BUTTON])
         cg.add(volume_down_button.set_parent(television_var))
         await sensor.new_sensor(conf[CONF_VOLUME_STATE])
 
