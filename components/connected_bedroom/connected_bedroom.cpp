@@ -206,12 +206,12 @@ void ConnectedBedroom::process_message_() {
 
           if (television != nullptr) {
             if (getIntFromVector(this->receivedMessage_, 5, 1) == 0) {
-              television->state = media_player::MEDIA_PLAYER_STATE_NONE;
+              television->state = media_player::MEDIA_PLAYER_STATE_IDLE;
               television->publish_state();
             }
 
             else if (getIntFromVector(this->receivedMessage_, 5, 1) == 1) {
-              television->state = media_player::MEDIA_PLAYER_STATE_IDLE;
+              television->state = media_player::MEDIA_PLAYER_STATE_PLAYING;
               television->publish_state();
             }
           }
