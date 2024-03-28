@@ -89,14 +89,6 @@ void ConnectedBedroom::loop() {
 }
 
 void ConnectedBedroom::process_message_() {
-  ESP_LOGD(TAG, "Début du processMessage");
-
-  String message;
-  for (int i = 0; i < receivedMessage_.size(); i++) {
-    message += receivedMessage_[i];
-  }
-  ESP_LOGD(TAG, "Message reçu : %s", message.c_str());
-
   switch (getIntFromVector(this->receivedMessage_, 0, 1)) {
     case 0: {
       int ID = getIntFromVector(this->receivedMessage_, 1, 2);
@@ -207,15 +199,10 @@ void ConnectedBedroom::process_message_() {
             break;
           }
 
-          ESP_LOGD(TAG, "La ça va 1");
-
           ConnectedBedroomTelevision *television = this->get_television_from_communication_id_(ID);
-          ESP_LOGD(TAG, "La ça va 2");
 
           if (television != nullptr) {
-            ESP_LOGD(TAG, "La ça va 3");
             television->state->publish_state(getIntFromVector(this->receivedMessage_, 5, 1));
-            ESP_LOGD(TAG, "La ça va 4");
 
             break;
           }
@@ -314,8 +301,6 @@ void ConnectedBedroom::process_message_() {
       break;
     }
   }
-
-  ESP_LOGD(TAG, "Fin du processMessage");
 
   this->receivedMessage_.clear();
 }
@@ -724,16 +709,12 @@ void TelevisionVolumeUp::set_parent(ConnectedBedroomTelevision *parent) {
 }
 
 void TelevisionVolumeUp::press_action() {
-  ESP_LOGD(TAG, "Début de l'augmentation du volume.");
-
   this->parent_->parent_->write('0');
   this->parent_->parent_->write_str(addZeros(this->parent_->communication_id_, 2).c_str());
   this->parent_->parent_->write('0');
   this->parent_->parent_->write('3');
   this->parent_->parent_->write('1');
   this->parent_->parent_->write('\n');
-
-  ESP_LOGD(TAG, "Fin de l'augmentation du volume.");
 }
 
 void TelevisionVolumeDown::set_parent(ConnectedBedroomTelevision *parent) {
