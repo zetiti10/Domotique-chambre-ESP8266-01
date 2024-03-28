@@ -73,7 +73,7 @@ void ConnectedBedroom::loop() {
     ESP_LOGD(TAG, "Lettre dispo");
     uint8_t letter = this->read();
 
-    ESP_LOGD(TAG, "Lettre : %s", letter);
+    ESP_LOGD(TAG, "Lettre : %c", letter);
 
     if (letter == '\r')
       continue;
