@@ -5,6 +5,7 @@
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/switch/switch.h"
 #include "esphome/components/alarm_control_panel/alarm_control_panel.h"
+#include "esphome/components/media_player/media_player.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/components/api/custom_api_device.h"
 
@@ -30,6 +31,7 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
   void add_binary_sensor(int communication_id, binary_sensor::BinarySensor *binary_sensor);
   void add_switch(int communication_id, switch_::Switch *switch_);
   void add_alarm(int communication_id, alarm_control_panel::AlarmControlPanel *alarm);
+  void add_television(int communication_id, media_player::MediaPlayer *media_player_);
   void add_connected_light(int communication_id, std::string entity_id, ConnectedLightTypes type);
 
  protected:
@@ -44,6 +46,7 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
   binary_sensor::BinarySensor *get_binary_sensor_from_communication_id_(int communication_id) const;
   switch_::Switch *get_switch_from_communication_id_(int communication_id) const;
   alarm_control_panel::AlarmControlPanel *get_alarm_from_communication_id_(int communication_id) const;
+  media_player::MediaPlayer *get_television_from_communication_id(int communication_id) const;
   std::string get_connected_light_from_communication_id_(int communication_id) const;
   int get_communication_id_from_connected_light_entity_id_(std::string entity_id) const;
   ConnectedLightTypes get_type_from_connected_light_communication_id(int communication_id) const;
@@ -54,6 +57,7 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
   std::vector<std::pair<int, binary_sensor::BinarySensor *>> binary_sensors_;
   std::vector<std::pair<int, switch_::Switch *>> switches_;
   std::vector<std::pair<int, alarm_control_panel::AlarmControlPanel *>> alarms_;
+  std::vector<std::pair<int, media_player::MediaPlayer *>> televisions_;
   std::vector<std::tuple<int, std::string, ConnectedLightTypes>> connected_lights_;
 };
 
@@ -77,7 +81,9 @@ class ConnectedBedroomSwitch : public Component, public switch_::Switch, public 
   void write_state(bool state) override;
 };
 
-class ConnectedBedroomAlarmControlPanel : public Component, public alarm_control_panel::AlarmControlPanel, public ConnectedBedroomDevice {
+class ConnectedBedroomAlarmControlPanel : public Component,
+                                          public alarm_control_panel::AlarmControlPanel,
+                                          public ConnectedBedroomDevice {
  public:
   void dump_config() override;
   void register_device() override;
@@ -91,9 +97,22 @@ class ConnectedBedroomAlarmControlPanel : public Component, public alarm_control
   std::vector<std::string> codes_;
 };
 
+class ConnectedBedroomMediaPlayer : public Component, public media_player::MediaPlayer, public ConnectedBedroomDevice {
+ public:
+  void dump_config() override;
+  void register_device() override;
+  bool is_muted() const override;
+  media_player::MediaPlayerTraits get_traits() override;
+
+ protected:
+  friend class ConnectedBedroom;
+
+  void control(const media_player::MediaPlayerCall &call) override;
+  bool muted_{false};
+};
+
 // Binary light
 // RGB LED strip
-// Alarm
 // Television
 
 }  // namespace connected_bedroom
