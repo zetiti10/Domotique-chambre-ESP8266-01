@@ -70,10 +70,7 @@ void ConnectedBedroom::setup() {
 
 void ConnectedBedroom::loop() {
   while (this->available()) {
-    ESP_LOGD(TAG, "Lettre dispo");
     uint8_t letter = this->read();
-
-    ESP_LOGD(TAG, "Lettre : %c", letter);
 
     if (letter == '\r')
       continue;
@@ -83,8 +80,6 @@ void ConnectedBedroom::loop() {
 
     else
       this->receivedMessage_.push_back(letter);
-
-    ESP_LOGD(TAG, "Ca passe");
   }
 }
 
