@@ -1,28 +1,37 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import uart, sensor, binary_sensor, switch, button, alarm_control_panel
+from esphome.components import uart, sensor, binary_sensor, switch, alarm_control_panel, button
 from esphome.const import CONF_ID, CONF_SWITCHES, CONF_ENTITY_ID
 
 CODEOWNERS = ["@zetiti10"]
 
 MULTI_CONF = True
 DEPENDENCIES = ['uart']
-AUTO_LOAD = ['sensor', 'binary_sensor', 'switch', 'button', 'alarm_control_panel']
+AUTO_LOAD = ['sensor', 'binary_sensor', 'switch', 'alarm_control_panel', 'button']
 
 connected_bedroom_ns = cg.esphome_ns.namespace('connected_bedroom')
 
 ConnectedBedroom = connected_bedroom_ns.class_('ConnectedBedroom', cg.Component, uart.UARTDevice)
 ConnectedBedroomDevice = connected_bedroom_ns.class_('ConnectedBedroomDevice')
 ConnectedBedroomSwitch = connected_bedroom_ns.class_('ConnectedBedroomSwitch', switch.Switch, cg.Component, ConnectedBedroomDevice)
-ConnectedBedroomButton = connected_bedroom_ns.class_('ConnectedBedroomButton', button.Button, cg.Component, ConnectedBedroomDevice)
 ConnectedBedroomAlarmControlPanel = connected_bedroom_ns.class_('ConnectedBedroomAlarmControlPanel', alarm_control_panel.AlarmControlPanel, cg.Component, ConnectedBedroomDevice)
+TelevisionState = connected_bedroom_ns.class_('TelevisionState', switch.Switch)
+TelevisionMuted = connected_bedroom_ns.class_('TelevisionMuted', switch.Switch)
+TelevisionVolumeUp = connected_bedroom_ns.class_('TelevisionVolumeUp', button.Button)
+TelevisionVolumeDown = connected_bedroom_ns.class_('TelevisionVolumeDown', button.Button)
+ConnectedBedroomTelevision = connected_bedroom_ns.class_('TelevisionState', cg.Component, ConnectedBedroomDevice)
 ConnectedLightTypes = connected_bedroom_ns.enum("ConnectedLightsType")
 
 CONF_ANALOG_SENSORS = "analog_sensors"
 CONF_BINARY_SENSORS = "binary_sensors"
-CONF_BUTTONS = "buttons"
 CONF_ALARMS = "alarms"
 CONF_CODES = "codes"
+CONF_TELEVISIONS = "televisions"
+CONF_STATE_SWITCH = "state_switch"
+CONF_MUTE_SWITCH = "mute_switch"
+CONF_VOLUME_UP_BUTTON = "volume_up_button"
+CONF_VOLUME_DOWN_BUTTON = "volume_down_button"
+CONF_VOLUME_STATE = "volume_state"
 CONF_CONNECTED_LIGHTS = "connected_lights"
 CONF_CONNECTED_LIGHT_TYPE = "type"
 CONF_COMMUNICATION_ID = "communication_id"
@@ -59,14 +68,6 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
                 }
             )
         ),
-        cv.Optional(CONF_BUTTONS): cv.ensure_list(
-            button.BUTTON_SCHEMA.extend(
-                {
-                    cv.GenerateID(): cv.declare_id(ConnectedBedroomButton),
-                    cv.Required(CONF_COMMUNICATION_ID): cv.positive_int,
-                }
-            )
-        ),
         cv.Optional(CONF_ALARMS): cv.ensure_list(
             alarm_control_panel.ALARM_CONTROL_PANEL_SCHEMA.extend(
                 {
@@ -75,6 +76,29 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
                     cv.Required(CONF_COMMUNICATION_ID): cv.positive_int,
                 }
             )
+        ),
+        cv.Optional(CONF_TELEVISIONS): cv.ensure_list(
+            {
+                cv.GenerateID(): cv.declare_id(ConnectedBedroomTelevision),
+                cv.Required(CONF_COMMUNICATION_ID): cv.positive_int,
+                cv.Required(CONF_STATE_SWITCH): switch.SWITCH_SCHEMA.extend(
+                    {
+                        cv.GenerateID(): cv.declare_id(TelevisionState),
+                    }),
+                cv.Required(CONF_MUTE_SWITCH): switch.SWITCH_SCHEMA.extend(
+                    {
+                        cv.GenerateID(): cv.declare_id(TelevisionMuted),
+                    }),
+                cv.Required(CONF_VOLUME_UP_BUTTON) : button.BUTTON_SCHEMA.extend(
+                    {
+                        cv.GenerateID(): cv.declare_id(TelevisionVolumeUp),
+                    }),
+                cv.Required(CONF_VOLUME_DOWN_BUTTON) : button.BUTTON_SCHEMA.extend(
+                    {
+                        cv.GenerateID(): cv.declare_id(TelevisionVolumeDown),
+                    }),
+                cv.Required(CONF_VOLUME_STATE) : sensor.SENSOR_SCHEMA,
+            }
         ),
         cv.Optional(CONF_CONNECTED_LIGHTS): cv.ensure_list(
             {
@@ -110,12 +134,6 @@ async def to_code(config):
         cg.add(switch_.set_communication_id(communication_id))
         cg.add(switch_.set_parent(var))
 
-    for conf in config[CONF_BUTTONS]:
-        button_ = await button.new_button(conf)
-        communication_id = conf[CONF_COMMUNICATION_ID]
-        cg.add(button_.set_communication_id(communication_id))
-        cg.add(button_.set_parent(var))
-
     for conf in config[CONF_ALARMS]:
         alarm_var = cg.new_Pvariable(conf[CONF_ID])
         await cg.register_component(alarm_var, conf)
@@ -126,6 +144,22 @@ async def to_code(config):
         if CONF_CODES in conf:
             for acode in conf[CONF_CODES]:
                 cg.add(alarm_var.add_code(acode))
+
+    for conf in config[CONF_TELEVISIONS]:
+        television_var = cg.new_Pvariable(conf[CONF_ID])
+        await cg.register_component(television_var, conf)
+        communication_id = conf[CONF_COMMUNICATION_ID]
+        cg.add(television_var.set_communication_id(communication_id))
+        cg.add(television_var.set_parent(var))
+        state_switch = await switch.new_switch(conf[CONF_STATE_SWITCH])
+        cg.add(state_switch.set_parent(television_var))
+        mute_switch = await switch.new_switch(conf[CONF_MUTE_SWITCH])
+        cg.add(mute_switch.set_parent(television_var))
+        volume_up_button = await switch.new_switch(conf[CONF_VOLUME_UP_BUTTON])
+        cg.add(volume_up_button.set_parent(television_var))
+        volume_down_button = await switch.new_switch(conf[CONF_VOLUME_DOWN_BUTTON])
+        cg.add(volume_down_button.set_parent(television_var))
+        await sensor.new_sensor(conf[CONF_VOLUME_STATE])
 
     for conf in config[CONF_CONNECTED_LIGHTS]:
         cg.add(var.add_connected_light(conf[CONF_COMMUNICATION_ID], conf[CONF_ENTITY_ID], conf[CONF_CONNECTED_LIGHT_TYPE]))

@@ -194,6 +194,14 @@ void ConnectedBedroom::process_message_() {
             break;
           }
 
+          ConnectedBedroomTelevision *television = this->get_television_from_communication_id_(ID);
+
+          if (television != nullptr) {
+            television->state->publish_state(getIntFromVector(this->receivedMessage_, 5, 1));
+
+            break;
+          }
+
           break;
         }
 
@@ -208,6 +216,32 @@ void ConnectedBedroom::process_message_() {
 
           else if (getIntFromVector(this->receivedMessage_, 5, 1) == 1)
             alarm->publish_state(alarm_control_panel::ACP_STATE_TRIGGERED);
+
+          break;
+        }
+
+        case 4: {
+          ConnectedBedroomTelevision *television = this->get_television_from_communication_id_(ID);
+
+          switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
+            case 0: {
+              television->volume->publish_state(getIntFromVector(this->receivedMessage_, 6, 2));
+
+              break;
+            }
+
+            case 1: {
+              television->muted->publish_state(true);
+
+              break;
+            }
+
+            case 2: {
+              television->muted->publish_state(false);
+
+              break;
+            }
+          }
 
           break;
         }
@@ -431,12 +465,12 @@ void ConnectedBedroom::add_switch(int communication_id, switch_::Switch *switch_
   this->switches_.push_back(std::make_pair(communication_id, switch_));
 }
 
-void ConnectedBedroom::add_button(int communication_id, button::Button *button_) {
-  this->buttons_.push_back(std::make_pair(communication_id, button_));
-}
-
 void ConnectedBedroom::add_alarm(int communication_id, alarm_control_panel::AlarmControlPanel *alarm) {
   this->alarms_.push_back(std::make_pair(communication_id, alarm));
+}
+
+void ConnectedBedroom::add_television(int communication_id, ConnectedBedroomTelevision *television) {
+  this->televisions_.push_back(std::make_pair(communication_id, television));
 }
 
 void ConnectedBedroom::add_connected_light(int communication_id, std::string entity_id, ConnectedLightTypes type) {
@@ -482,19 +516,6 @@ switch_::Switch *ConnectedBedroom::get_switch_from_communication_id_(int communi
   }
 }
 
-button::Button *ConnectedBedroom::get_button_from_communication_id_(int communication_id) const {
-  auto it = std::find_if(buttons_.begin(), buttons_.end(),
-                         [communication_id](const std::pair<int, button::Button *> &element) {
-                           return element.first == communication_id;
-                         });
-
-  if (it != buttons_.end()) {
-    return it->second;
-  } else {
-    return nullptr;
-  }
-}
-
 alarm_control_panel::AlarmControlPanel *ConnectedBedroom::get_alarm_from_communication_id_(int communication_id) const {
   auto it = std::find_if(alarms_.begin(), alarms_.end(),
                          [communication_id](const std::pair<int, alarm_control_panel::AlarmControlPanel *> &element) {
@@ -502,6 +523,19 @@ alarm_control_panel::AlarmControlPanel *ConnectedBedroom::get_alarm_from_communi
                          });
 
   if (it != alarms_.end()) {
+    return it->second;
+  } else {
+    return nullptr;
+  }
+}
+
+ConnectedBedroomTelevision *ConnectedBedroom::get_television_from_communication_id_(int communication_id) const {
+  auto it = std::find_if(televisions_.begin(), televisions_.end(),
+                         [communication_id](const std::pair<int, ConnectedBedroomTelevision *> &element) {
+                           return element.first == communication_id;
+                         });
+
+  if (it != televisions_.end()) {
     return it->second;
   } else {
     return nullptr;
@@ -565,18 +599,6 @@ void ConnectedBedroomSwitch::write_state(bool state) {
   this->parent_->write('0');
   this->parent_->write('0');
   this->parent_->write(state ? '1' : '0');
-  this->parent_->write('\n');
-}
-
-void ConnectedBedroomButton::dump_config() { LOG_BUTTON("", "ConnectedBedroomButton", this); }
-
-void ConnectedBedroomButton::register_device() { this->parent_->add_button(this->communication_id_, this); }
-
-void ConnectedBedroomButton::press_action() {
-  this->parent_->write('0');
-  this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
-  this->parent_->write('0');
-  this->parent_->write('3');
   this->parent_->write('\n');
 }
 
@@ -646,6 +668,56 @@ void ConnectedBedroomAlarmControlPanel::control(const alarm_control_panel::Alarm
   }
 
   this->parent_->write('\n');
+}
+
+void TelevisionState::set_parent(ConnectedBedroomTelevision *parent) { this->parent_ = parent; }
+
+void TelevisionState::write_state(bool state) {
+  this->parent_->parent_->write('0');
+  this->parent_->parent_->write_str(addZeros(this->parent_->communication_id_, 2).c_str());
+  this->parent_->parent_->write('0');
+  this->parent_->parent_->write('0');
+  this->parent_->parent_->write(state ? '1' : '0');
+  this->parent_->parent_->write('\n');
+}
+
+void TelevisionMuted::set_parent(ConnectedBedroomTelevision *parent) { this->parent_ = parent; }
+
+void TelevisionMuted::write_state(bool state) {
+  this->parent_->parent_->write('0');
+  this->parent_->parent_->write_str(addZeros(this->parent_->communication_id_, 2).c_str());
+  this->parent_->parent_->write('0');
+  this->parent_->parent_->write('3');
+  this->parent_->parent_->write(state ? '2' : '3');
+  this->parent_->parent_->write('\n');
+}
+
+void TelevisionVolumeUp::set_parent(ConnectedBedroomTelevision *parent) { this->parent_ = parent; }
+
+void TelevisionVolumeUp::press_action() {
+  this->parent_->parent_->write('0');
+  this->parent_->parent_->write_str(addZeros(this->parent_->communication_id_, 2).c_str());
+  this->parent_->parent_->write('0');
+  this->parent_->parent_->write('3');
+  this->parent_->parent_->write('1');
+  this->parent_->parent_->write('\n');
+}
+
+void TelevisionVolumeDown::set_parent(ConnectedBedroomTelevision *parent) { this->parent_ = parent; }
+
+void TelevisionVolumeDown::press_action() {
+  this->parent_->parent_->write('0');
+  this->parent_->parent_->write_str(addZeros(this->parent_->communication_id_, 2).c_str());
+  this->parent_->parent_->write('0');
+  this->parent_->parent_->write('3');
+  this->parent_->parent_->write('0');
+  this->parent_->parent_->write('\n');
+}
+
+void ConnectedBedroomTelevision::dump_config() { ESP_LOGCONFIG(TAG, "ConnectedBedroomTelevision"); }
+
+void ConnectedBedroomTelevision::register_device() {
+  this->parent_->add_television(this->communication_id_, this);
 }
 
 }  // namespace connected_bedroom
