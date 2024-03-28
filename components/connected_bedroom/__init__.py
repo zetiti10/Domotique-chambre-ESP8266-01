@@ -19,7 +19,7 @@ TelevisionState = connected_bedroom_ns.class_('TelevisionState', switch.Switch)
 TelevisionMuted = connected_bedroom_ns.class_('TelevisionMuted', switch.Switch)
 TelevisionVolumeUp = connected_bedroom_ns.class_('TelevisionVolumeUp', button.Button)
 TelevisionVolumeDown = connected_bedroom_ns.class_('TelevisionVolumeDown', button.Button)
-ConnectedBedroomTelevision = connected_bedroom_ns.class_('TelevisionState', cg.Component, ConnectedBedroomDevice)
+ConnectedBedroomTelevision = connected_bedroom_ns.class_('ConnectedBedroomTelevision', cg.Component, ConnectedBedroomDevice)
 ConnectedLightTypes = connected_bedroom_ns.enum("ConnectedLightsType")
 
 CONF_ANALOG_SENSORS = "analog_sensors"
