@@ -695,12 +695,16 @@ void TelevisionMuted::write_state(bool state) {
 void TelevisionVolumeUp::set_parent(ConnectedBedroomTelevision *parent) { this->parent_ = parent; }
 
 void TelevisionVolumeUp::press_action() {
+  ESP_LOGD(TAG, "Début de l'augmentation du volume.");
+
   this->parent_->parent_->write('0');
   this->parent_->parent_->write_str(addZeros(this->parent_->communication_id_, 2).c_str());
   this->parent_->parent_->write('0');
   this->parent_->parent_->write('3');
   this->parent_->parent_->write('1');
   this->parent_->parent_->write('\n');
+
+  ESP_LOGD(TAG, "Fin de l'augmentation du volume.");
 }
 
 void TelevisionVolumeDown::set_parent(ConnectedBedroomTelevision *parent) { this->parent_ = parent; }
