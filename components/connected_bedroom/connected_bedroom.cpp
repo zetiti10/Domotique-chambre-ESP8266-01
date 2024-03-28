@@ -74,6 +74,10 @@ void ConnectedBedroom::setup() {
         break;
     }
   }
+
+  for (auto television : this->televisions_) {
+    television.second->state = media_player::MEDIA_PLAYER_STATE_IDLE;
+  }
 }
 
 void ConnectedBedroom::loop() {
