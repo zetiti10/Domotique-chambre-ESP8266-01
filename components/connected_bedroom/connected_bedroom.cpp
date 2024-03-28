@@ -31,14 +31,6 @@ int getIntFromVector(std::vector<uint8_t> &string, int position, int lenght) {
   return result;
 }
 
-long map(long x, long in_min, long in_max, long out_min, long out_max) {
-  const long dividend = out_max - out_min;
-  const long divisor = in_max - in_min;
-  const long delta = x - in_min;
-
-  return (delta * dividend + (divisor / 2)) / divisor + out_min;
-}
-
 float ConnectedBedroom::get_setup_priority() const { return setup_priority::DATA; }
 
 void ConnectedBedroom::setup() {
@@ -73,10 +65,6 @@ void ConnectedBedroom::setup() {
       case BINARY_CONNECTED_LIGHT:
         break;
     }
-  }
-
-  for (auto television : this->televisions_) {
-    television.second->state = media_player::MEDIA_PLAYER_STATE_IDLE;
   }
 }
 
@@ -206,20 +194,6 @@ void ConnectedBedroom::process_message_() {
             break;
           }
 
-          media_player::MediaPlayer *television = this->get_television_from_communication_id(ID);
-
-          if (television != nullptr) {
-            if (getIntFromVector(this->receivedMessage_, 5, 1) == 0) {
-              television->state = media_player::MEDIA_PLAYER_STATE_IDLE;
-              television->publish_state();
-            }
-
-            else if (getIntFromVector(this->receivedMessage_, 5, 1) == 1) {
-              television->state = media_player::MEDIA_PLAYER_STATE_PLAYING;
-              television->publish_state();
-            }
-          }
-
           break;
         }
 
@@ -234,38 +208,6 @@ void ConnectedBedroom::process_message_() {
 
           else if (getIntFromVector(this->receivedMessage_, 5, 1) == 1)
             alarm->publish_state(alarm_control_panel::ACP_STATE_TRIGGERED);
-
-          break;
-        }
-
-        case 4: {
-          ConnectedBedroomMediaPlayer *television =
-              static_cast<ConnectedBedroomMediaPlayer *>(this->get_television_from_communication_id(ID));
-
-          if (television == nullptr)
-            break;
-
-          switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
-            case 0: {
-              int volume = map(long(getIntFromVector(this->receivedMessage_, 6, 2)), 0.0l, 25.0, 0.0, 1.0);
-
-              television->volume = volume;
-              television->publish_state();
-              break;
-            }
-
-            case 1: {
-              television->muted_ = true;
-              television->publish_state();
-              break;
-            }
-
-            case 2: {
-              television->muted_ = false;
-              television->publish_state();
-              break;
-            }
-          }
 
           break;
         }
@@ -489,12 +431,12 @@ void ConnectedBedroom::add_switch(int communication_id, switch_::Switch *switch_
   this->switches_.push_back(std::make_pair(communication_id, switch_));
 }
 
-void ConnectedBedroom::add_alarm(int communication_id, alarm_control_panel::AlarmControlPanel *alarm) {
-  this->alarms_.push_back(std::make_pair(communication_id, alarm));
+void ConnectedBedroom::add_button(int communication_id, button::Button *button_) {
+  this->buttons_.push_back(std::make_pair(communication_id, button_));
 }
 
-void ConnectedBedroom::add_television(int communication_id, media_player::MediaPlayer *media_player_) {
-  this->televisions_.push_back(std::make_pair(communication_id, media_player_));
+void ConnectedBedroom::add_alarm(int communication_id, alarm_control_panel::AlarmControlPanel *alarm) {
+  this->alarms_.push_back(std::make_pair(communication_id, alarm));
 }
 
 void ConnectedBedroom::add_connected_light(int communication_id, std::string entity_id, ConnectedLightTypes type) {
@@ -540,6 +482,19 @@ switch_::Switch *ConnectedBedroom::get_switch_from_communication_id_(int communi
   }
 }
 
+button::Button *ConnectedBedroom::get_button_from_communication_id_(int communication_id) const {
+  auto it = std::find_if(buttons_.begin(), buttons_.end(),
+                         [communication_id](const std::pair<int, button::Button *> &element) {
+                           return element.first == communication_id;
+                         });
+
+  if (it != buttons_.end()) {
+    return it->second;
+  } else {
+    return nullptr;
+  }
+}
+
 alarm_control_panel::AlarmControlPanel *ConnectedBedroom::get_alarm_from_communication_id_(int communication_id) const {
   auto it = std::find_if(alarms_.begin(), alarms_.end(),
                          [communication_id](const std::pair<int, alarm_control_panel::AlarmControlPanel *> &element) {
@@ -547,19 +502,6 @@ alarm_control_panel::AlarmControlPanel *ConnectedBedroom::get_alarm_from_communi
                          });
 
   if (it != alarms_.end()) {
-    return it->second;
-  } else {
-    return nullptr;
-  }
-}
-
-media_player::MediaPlayer *ConnectedBedroom::get_television_from_communication_id(int communication_id) const {
-  auto it = std::find_if(televisions_.begin(), televisions_.end(),
-                         [communication_id](const std::pair<int, media_player::MediaPlayer *> &element) {
-                           return element.first == communication_id;
-                         });
-
-  if (it != televisions_.end()) {
     return it->second;
   } else {
     return nullptr;
@@ -623,6 +565,18 @@ void ConnectedBedroomSwitch::write_state(bool state) {
   this->parent_->write('0');
   this->parent_->write('0');
   this->parent_->write(state ? '1' : '0');
+  this->parent_->write('\n');
+}
+
+void ConnectedBedroomButton::dump_config() { LOG_BUTTON("", "ConnectedBedroomButton", this); }
+
+void ConnectedBedroomButton::register_device() { this->parent_->add_button(this->communication_id_, this); }
+
+void ConnectedBedroomButton::press_action() {
+  this->parent_->write('0');
+  this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
+  this->parent_->write('0');
+  this->parent_->write('3');
   this->parent_->write('\n');
 }
 
@@ -694,88 +648,5 @@ void ConnectedBedroomAlarmControlPanel::control(const alarm_control_panel::Alarm
   this->parent_->write('\n');
 }
 
-void ConnectedBedroomMediaPlayer::dump_config() {
-  ESP_LOGCONFIG(TAG, "ConnectedBedroomMediaPlayer");
-  ESP_LOGCONFIG(TAG, "  Current State: %s", LOG_STR_ARG(media_player::media_player_state_to_string(this->state)));
-  ESP_LOGCONFIG(TAG, "  Volume: %u", this->volume);
-}
-
-void ConnectedBedroomMediaPlayer::register_device() { this->parent_->add_television(this->communication_id_, this); }
-
-bool ConnectedBedroomMediaPlayer::is_muted() const { return muted_; }
-
-media_player::MediaPlayerTraits ConnectedBedroomMediaPlayer::get_traits() {
-  auto traits = media_player::MediaPlayerTraits();
-  traits.set_supports_pause(false);
-  return traits;
-}
-
-void ConnectedBedroomMediaPlayer::control(const media_player::MediaPlayerCall &call) {
-  this->parent_->write('0');
-  this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
-
-  /*if (call.get_volume().has_value()) {
-    this->parent_->write('0');
-    this->parent_->write('3');
-
-    if (this->volume > call.get_volume().value())
-      this->parent_->write('0');
-
-    else if (this->volume < call.get_volume().value())
-      this->parent_->write('1');
-  }*/
-
-  if (call.get_command().has_value()) {
-    switch (call.get_command().value()) {
-      case media_player::MEDIA_PLAYER_COMMAND_MUTE: {
-        this->parent_->write('0');
-        this->parent_->write('3');
-        this->parent_->write('2');
-        break;
-      }
-
-      case media_player::MEDIA_PLAYER_COMMAND_UNMUTE: {
-        this->parent_->write('0');
-        this->parent_->write('3');
-        this->parent_->write('3');
-        break;
-      }
-
-      case media_player::MEDIA_PLAYER_COMMAND_PLAY: {
-        this->parent_->write('0');
-        this->parent_->write('0');
-        this->parent_->write('1');
-        break;
-      }
-
-      case media_player::MEDIA_PLAYER_COMMAND_STOP: {
-        this->parent_->write('0');
-        this->parent_->write('0');
-        this->parent_->write('0');
-        break;
-      }
-
-      case media_player::MEDIA_PLAYER_COMMAND_VOLUME_UP: {
-        this->parent_->write('0');
-        this->parent_->write('3');
-        this->parent_->write('1');
-        break;
-      }
-
-      case media_player::MEDIA_PLAYER_COMMAND_VOLUME_DOWN: {
-        this->parent_->write('0');
-        this->parent_->write('3');
-        this->parent_->write('0');
-        break;
-      }
-    }
-  }
-
-  this->parent_->write('\n');
-}
-
 }  // namespace connected_bedroom
 }  // namespace esphome
-
-// Se baser sur tuya light
-// Comment update le state ?
