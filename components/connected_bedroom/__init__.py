@@ -185,7 +185,7 @@ async def to_code(config):
         await light.register_light(strip_var, conf)
         communication_id = conf[CONF_COMMUNICATION_ID]
         cg.add(strip_var.set_communication_id(communication_id))
-        cg.add(strip_var.set_parent(strip_var))
+        cg.add(strip_var.set_parent(var))
 
     for conf in config[CONF_CONNECTED_LIGHTS]:
         cg.add(var.add_connected_light(conf[CONF_COMMUNICATION_ID], conf[CONF_ENTITY_ID], conf[CONF_CONNECTED_LIGHT_TYPE]))
