@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import uart, sensor, binary_sensor, switch, alarm_control_panel, button, light
-from esphome.const import CONF_ID, CONF_SWITCHES, CONF_ENTITY_ID, CONF_OUTPUT_ID
+from esphome.const import CONF_ID, CONF_SWITCHES, CONF_ENTITY_ID, CONF_OUTPUT_ID, CONF_DEFAULT_TRANSITION_LENGTH
 
 CODEOWNERS = ["@zetiti10"]
 
@@ -181,6 +181,7 @@ async def to_code(config):
         cg.add(television_var.setVolumeSensor(volume))
 
     for conf in config[CONF_RGB_LED_STRIPS]:
+        conf[CONF_DEFAULT_TRANSITION_LENGTH] = "0s"
         strip_var = cg.new_Pvariable(conf[CONF_OUTPUT_ID])
         await light.register_light(strip_var, conf)
         communication_id = conf[CONF_COMMUNICATION_ID]
