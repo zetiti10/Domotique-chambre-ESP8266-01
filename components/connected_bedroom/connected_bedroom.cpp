@@ -763,8 +763,12 @@ light::LightTraits ConnectedBedroomRGBLEDStrip::get_traits() {
 }
 
 void ConnectedBedroomRGBLEDStrip::write_state(light::LightState *state) {
-  float red, green, blue;
-  state->current_values_as_rgb(&red, &green, &blue, false);
+  float r, g, b;
+  state->current_values_as_rgb(&r, &g, &b, false);
+
+  int red = r * 255.0f;
+  int green = g * 255.0f;
+  int blue = b * 255.0f;
 
   this->parent_->write('0');
   this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
