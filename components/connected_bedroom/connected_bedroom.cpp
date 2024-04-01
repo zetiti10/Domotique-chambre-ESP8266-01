@@ -1,5 +1,6 @@
 #include "connected_bedroom.h"
 #include "esphome/core/log.h"
+#include <sstream>
 
 namespace esphome {
 namespace connected_bedroom {
@@ -610,9 +611,6 @@ void ConnectedBedroomDevice::set_parent(ConnectedBedroom *parent) {
   this->register_device();
 }
 
-void ConnectedBedroomSwitch::dump_config() { /*LOG_SWITCH("", "ConnectedBedroomSwitch", this);*/
-}
-
 void ConnectedBedroomSwitch::register_device() { this->parent_->add_switch(this->communication_id_, this); }
 
 void ConnectedBedroomSwitch::write_state(bool state) {
@@ -622,15 +620,6 @@ void ConnectedBedroomSwitch::write_state(bool state) {
   this->parent_->write('0');
   this->parent_->write(state ? '1' : '0');
   this->parent_->write('\n');
-}
-
-void ConnectedBedroomAlarmControlPanel::dump_config() {
-  /*ESP_LOGCONFIG(TAG, "ConnectedBedroomAlarmControlPanel");
-  ESP_LOGCONFIG(TAG, "  Current State: %s", LOG_STR_ARG(alarm_control_panel_state_to_string(this->current_state_)));
-  ESP_LOGCONFIG(TAG, "  Number of Codes: %u", this->codes_.size());
-  if (!this->codes_.empty())
-    ESP_LOGCONFIG(TAG, "  Requires Code To Arm: %s", YESNO(this->get_requires_code_to_arm()));
-  ESP_LOGCONFIG(TAG, "  Supported Features: %" PRIu32, this->get_supported_features());*/
 }
 
 void ConnectedBedroomAlarmControlPanel::register_device() { this->parent_->add_alarm(this->communication_id_, this); }
@@ -742,16 +731,9 @@ void TelevisionVolumeDown::press_action() {
   this->parent_->parent_->write('\n');
 }
 
-void ConnectedBedroomTelevision::dump_config() { /*ESP_LOGCONFIG(TAG, "ConnectedBedroomTelevision");*/
-}
-
 void ConnectedBedroomTelevision::register_device() { this->parent_->add_television(this->communication_id_, this); }
 
 void ConnectedBedroomTelevision::setVolumeSensor(sensor::Sensor *sens) { this->volume = sens; }
-
-void ConnectedBedroomRGBLEDStrip::dump_config() {
-  // Dump config.
-}
 
 void ConnectedBedroomRGBLEDStrip::register_device() { this->parent_->add_RGB_LED_strip(this->communication_id_, this); }
 

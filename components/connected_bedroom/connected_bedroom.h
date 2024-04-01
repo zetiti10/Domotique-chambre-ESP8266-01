@@ -78,8 +78,6 @@ class ConnectedBedroomDevice {
 
 class ConnectedBedroomSwitch : public Component, public switch_::Switch, public ConnectedBedroomDevice {
  public:
-  void dump_config() override;
-
   void register_device() override;
 
  protected:
@@ -90,8 +88,6 @@ class ConnectedBedroomAlarmControlPanel : public Component,
                                           public alarm_control_panel::AlarmControlPanel,
                                           public ConnectedBedroomDevice {
  public:
-  void dump_config() override;
-
   void register_device() override;
 
   uint32_t get_supported_features() const override;
@@ -149,8 +145,6 @@ class TelevisionVolumeDown : public button::Button, public TelevisionComponent {
 
 class ConnectedBedroomTelevision : public Component, public ConnectedBedroomDevice {
  public:
-  void dump_config() override;
-
   void register_device() override;
 
   void setVolumeSensor(sensor::Sensor *sens);
@@ -170,8 +164,6 @@ class ConnectedBedroomTelevision : public Component, public ConnectedBedroomDevi
 
 class ConnectedBedroomRGBLEDStrip : public Component, public light::LightOutput, public ConnectedBedroomDevice {
  public:
-  void dump_config() override;
-
   void register_device() override;
 
   light::LightTraits get_traits() override;
