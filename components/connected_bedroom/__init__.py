@@ -181,7 +181,7 @@ async def to_code(config):
         cg.add(television_var.setVolumeSensor(volume))
 
     for conf in config[CONF_RGB_LED_STRIPS]:
-        conf[CONF_DEFAULT_TRANSITION_LENGTH] = "0s"
+        conf[CONF_DEFAULT_TRANSITION_LENGTH] = 0
         strip_var = cg.new_Pvariable(conf[CONF_OUTPUT_ID])
         await light.register_light(strip_var, conf)
         communication_id = conf[CONF_COMMUNICATION_ID]
