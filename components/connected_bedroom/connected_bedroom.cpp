@@ -754,7 +754,7 @@ void ConnectedBedroomRGBLEDStrip::write_state(light::LightState *state) {
   this->parent_->write('0');
   this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
   this->parent_->write('0');
-  this->parent_->write('3');
+  this->parent_->write('1');
   this->parent_->write('0');
   this->parent_->write_str(addZeros(red, 3).c_str());
   this->parent_->write_str(addZeros(green, 3).c_str());
