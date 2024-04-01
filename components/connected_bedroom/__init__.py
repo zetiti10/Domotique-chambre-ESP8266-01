@@ -110,15 +110,12 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
         ),
 
         cv.Optional(CONF_RGB_LED_STRIPS): cv.ensure_list(
-            {
-                light.RGB_LIGHT_SCHEMA.extend(
-                    {
-                        cv.GenerateID() : cv.declare_id(ConnectedBedroomRGBLEDStrip),
-                        cv.Required(CONF_COMMUNICATION_ID): cv.positive_int,
-                    }
-                )
-
-            }
+            light.RGB_LIGHT_SCHEMA.extend(
+                {
+                    cv.GenerateID() : cv.declare_id(ConnectedBedroomRGBLEDStrip),
+                    cv.Required(CONF_COMMUNICATION_ID): cv.positive_int,
+                }
+            )
         ),
 
         cv.Optional(CONF_CONNECTED_LIGHTS): cv.ensure_list(
@@ -182,7 +179,7 @@ async def to_code(config):
         cg.add(volume_down_button.set_parent(television_var))
         volume = await sensor.new_sensor(conf[CONF_VOLUME_STATE])
         cg.add(television_var.setVolumeSensor(volume))
-        
+
     for conf in config[CONF_RGB_LED_STRIPS]:
         strip_var = cg.new_Pvariable(conf[CONF_ID])
         await light.register_light(strip_var, conf)
