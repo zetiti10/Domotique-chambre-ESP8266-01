@@ -1,6 +1,5 @@
 #include "connected_bedroom.h"
 #include "esphome/core/log.h"
-#include <sstream>
 
 namespace esphome {
 namespace connected_bedroom {
