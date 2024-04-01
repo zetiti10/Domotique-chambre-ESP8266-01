@@ -13,13 +13,15 @@ connected_bedroom_ns = cg.esphome_ns.namespace('connected_bedroom')
 
 ConnectedBedroom = connected_bedroom_ns.class_('ConnectedBedroom', cg.Component, uart.UARTDevice)
 ConnectedBedroomDevice = connected_bedroom_ns.class_('ConnectedBedroomDevice')
-ConnectedBedroomSwitch = connected_bedroom_ns.class_('ConnectedBedroomSwitch', switch.Switch, cg.Component, ConnectedBedroomDevice)
-ConnectedBedroomAlarmControlPanel = connected_bedroom_ns.class_('ConnectedBedroomAlarmControlPanel', alarm_control_panel.AlarmControlPanel, cg.Component, ConnectedBedroomDevice)
-TelevisionState = connected_bedroom_ns.class_('TelevisionState', switch.Switch)
-TelevisionMuted = connected_bedroom_ns.class_('TelevisionMuted', switch.Switch)
-TelevisionVolumeUp = connected_bedroom_ns.class_('TelevisionVolumeUp', button.Button)
-TelevisionVolumeDown = connected_bedroom_ns.class_('TelevisionVolumeDown', button.Button)
+ConnectedBedroomSwitch = connected_bedroom_ns.class_('ConnectedBedroomSwitch', cg.Component, switch.Switch, ConnectedBedroomDevice)
+ConnectedBedroomAlarmControlPanel = connected_bedroom_ns.class_('ConnectedBedroomAlarmControlPanel', cg.Component, alarm_control_panel.AlarmControlPanel, ConnectedBedroomDevice)
+TelevisionComponent = connected_bedroom_ns.class_("TelevisionComponent")
+TelevisionState = connected_bedroom_ns.class_('TelevisionState', switch.Switch, TelevisionComponent)
+TelevisionMuted = connected_bedroom_ns.class_('TelevisionMuted', switch.Switch, TelevisionComponent)
+TelevisionVolumeUp = connected_bedroom_ns.class_('TelevisionVolumeUp', button.Button, TelevisionComponent)
+TelevisionVolumeDown = connected_bedroom_ns.class_('TelevisionVolumeDown', button.Button, TelevisionComponent)
 ConnectedBedroomTelevision = connected_bedroom_ns.class_('ConnectedBedroomTelevision', cg.Component, ConnectedBedroomDevice)
+
 ConnectedLightTypes = connected_bedroom_ns.enum("ConnectedLightsType")
 
 CONF_ANALOG_SENSORS = "analog_sensors"

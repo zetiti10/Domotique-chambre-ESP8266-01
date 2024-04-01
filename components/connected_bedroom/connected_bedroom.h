@@ -22,10 +22,10 @@ class ConnectedBedroomTelevision;
 
 class ConnectedBedroom : public Component, public uart::UARTDevice, public api::CustomAPIDevice {
  public:
-  float get_setup_priority() const override;
   void setup() override;
   void loop() override;
   void dump_config() override;
+  float get_setup_priority() const override;
 
   void add_analog_sensor(int communication_id, sensor::Sensor *analog_sensor);
   void add_binary_sensor(int communication_id, binary_sensor::BinarySensor *binary_sensor);
@@ -36,6 +36,7 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
 
  protected:
   void process_message_();
+
   void send_message_to_Arduino_(std::string title, std::string message);
   void update_connected_light_state_(std::string entity_id, std::string state);
   void update_connected_light_brightness_(std::string entity_id, std::string state);
@@ -49,7 +50,7 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
   ConnectedBedroomTelevision *get_television_from_communication_id_(int communication_id) const;
   std::string get_connected_light_from_communication_id_(int communication_id) const;
   int get_communication_id_from_connected_light_entity_id_(std::string entity_id) const;
-  ConnectedLightTypes get_type_from_connected_light_communication_id(int communication_id) const;
+  ConnectedLightTypes get_type_from_connected_light_communication_id_(int communication_id) const;
 
   std::vector<uint8_t> receivedMessage_;
 
@@ -65,6 +66,7 @@ class ConnectedBedroomDevice {
  public:
   void set_communication_id(int communication_id);
   void set_parent(ConnectedBedroom *parent);
+
   virtual void register_device() = 0;
 
  protected:
@@ -75,6 +77,7 @@ class ConnectedBedroomDevice {
 class ConnectedBedroomSwitch : public Component, public switch_::Switch, public ConnectedBedroomDevice {
  public:
   void dump_config() override;
+
   void register_device() override;
 
  protected:
@@ -86,7 +89,9 @@ class ConnectedBedroomAlarmControlPanel : public Component,
                                           public ConnectedBedroomDevice {
  public:
   void dump_config() override;
+
   void register_device() override;
+
   uint32_t get_supported_features() const override;
   bool get_requires_code() const override;
   bool get_requires_code_to_arm() const override;
@@ -94,52 +99,56 @@ class ConnectedBedroomAlarmControlPanel : public Component,
 
  protected:
   virtual void control(const alarm_control_panel::AlarmControlPanelCall &call) override;
+
   std::vector<std::string> codes_;
 };
 
-class TelevisionState : public switch_::Switch {
+class TelevisionComponent {
  public:
   void set_parent(ConnectedBedroomTelevision *parent);
+
+  virtual void register_component() = 0;
+
+ protected:
+  ConnectedBedroomTelevision *parent_;
+};
+
+class TelevisionState : public switch_::Switch, public TelevisionComponent {
+ public:
+  void register_component() override;
 
  protected:
   void write_state(bool state) override;
-
-  ConnectedBedroomTelevision *parent_;
 };
 
-class TelevisionMuted : public switch_::Switch {
+class TelevisionMuted : public switch_::Switch, public TelevisionComponent {
  public:
-  void set_parent(ConnectedBedroomTelevision *parent);
+  void register_component() override;
 
  protected:
   void write_state(bool state) override;
-
-  ConnectedBedroomTelevision *parent_;
 };
 
-class TelevisionVolumeUp : public button::Button {
+class TelevisionVolumeUp : public button::Button, public TelevisionComponent {
  public:
-  void set_parent(ConnectedBedroomTelevision *parent);
+  void register_component() override;
 
  protected:
   void press_action() override;
-
-  ConnectedBedroomTelevision *parent_;
 };
 
-class TelevisionVolumeDown : public button::Button {
+class TelevisionVolumeDown : public button::Button, public TelevisionComponent {
  public:
-  void set_parent(ConnectedBedroomTelevision *parent);
+  void register_component() override;
 
  protected:
   void press_action() override;
-
-  ConnectedBedroomTelevision *parent_;
 };
 
 class ConnectedBedroomTelevision : public Component, public ConnectedBedroomDevice {
  public:
   void dump_config() override;
+
   void register_device() override;
 
   void setVolumeSensor(sensor::Sensor *sens);
@@ -157,10 +166,7 @@ class ConnectedBedroomTelevision : public Component, public ConnectedBedroomDevi
   friend class TelevisionVolumeDown;
 };
 
-// Binary light
 // RGB LED strip
-// Alarm
-// Television
 
 }  // namespace connected_bedroom
 }  // namespace esphome

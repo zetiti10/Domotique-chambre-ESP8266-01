@@ -5,7 +5,7 @@
 namespace esphome {
 namespace connected_bedroom {
 
-static const char *TAG = "connected.bedroom";
+static const char *TAG = "connected_bedroom";
 
 std::string addZeros(int number, int length) {
   std::string result = std::to_string(number);
@@ -37,22 +37,23 @@ void ConnectedBedroom::setup() {
   this->register_service(&esphome::connected_bedroom::ConnectedBedroom::send_message_to_Arduino_,
                          "print_message_on_display", {"title", "message"});
 
-  for (auto light : this->connected_lights_) {
-    std::string &entity_id = std::get<1>(light);
+  for (auto connected_light : this->connected_lights_) {
+    std::string &entity_id = std::get<1>(connected_light);
 
     this->subscribe_homeassistant_state(&esphome::connected_bedroom::ConnectedBedroom::update_connected_light_state_,
                                         entity_id);
 
-    switch (std::get<2>(light)) {
-      case TEMPERATURE_VARIABLE_CONNECTED_LIGHT:
+    switch (std::get<2>(connected_light)) {
+      case TEMPERATURE_VARIABLE_CONNECTED_LIGHT: {
         this->subscribe_homeassistant_state(
             &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_temperature_, entity_id,
             "color_temp_kelvin");
         this->subscribe_homeassistant_state(
             &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_brightness_, entity_id, "brightness");
         break;
+      }
 
-      case COLOR_VARIABLE_CONNECTED_LIGHT:
+      case COLOR_VARIABLE_CONNECTED_LIGHT: {
         this->subscribe_homeassistant_state(
             &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_color_, entity_id, "rgb_color");
         this->subscribe_homeassistant_state(
@@ -61,9 +62,11 @@ void ConnectedBedroom::setup() {
         this->subscribe_homeassistant_state(
             &esphome::connected_bedroom::ConnectedBedroom::update_connected_light_brightness_, entity_id, "brightness");
         break;
+      }
 
-      case BINARY_CONNECTED_LIGHT:
+      case BINARY_CONNECTED_LIGHT: {
         break;
+      }
     }
   }
 }
@@ -86,28 +89,29 @@ void ConnectedBedroom::loop() {
 void ConnectedBedroom::process_message_() {
   switch (getIntFromVector(this->receivedMessage_, 0, 1)) {
     case 0: {
-      int ID = getIntFromVector(this->receivedMessage_, 1, 2);
+      int communication_id = getIntFromVector(this->receivedMessage_, 1, 2);
 
       switch (getIntFromVector(this->receivedMessage_, 3, 2)) {
         case 0: {
-          std::string light = this->get_connected_light_from_communication_id_(ID);
+          std::string connected_light_entity_id = this->get_connected_light_from_communication_id_(communication_id);
 
-          if (light != "") {
-            switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
-              case 0: {
-                this->call_homeassistant_service("light.turn_off", {{"entity_id", light}});
-                break;
-              }
+          if (connected_light_entity_id == "")
+            break;
 
-              case 1: {
-                this->call_homeassistant_service("light.turn_on", {{"entity_id", light}});
-                break;
-              }
+          switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
+            case 0: {
+              this->call_homeassistant_service("light.turn_off", {{"entity_id", connected_light_entity_id}});
+              break;
+            }
 
-              case 2: {
-                this->call_homeassistant_service("light.toggle", {{"entity_id", light}});
-                break;
-              }
+            case 1: {
+              this->call_homeassistant_service("light.turn_on", {{"entity_id", connected_light_entity_id}});
+              break;
+            }
+
+            case 2: {
+              this->call_homeassistant_service("light.toggle", {{"entity_id", connected_light_entity_id}});
+              break;
             }
           }
 
@@ -115,33 +119,40 @@ void ConnectedBedroom::process_message_() {
         }
 
         case 4: {
-          std::string light = this->get_connected_light_from_communication_id_(ID);
+          std::string connected_light_entity_id = this->get_connected_light_from_communication_id_(communication_id);
+
+          if (connected_light_entity_id == "")
+            break;
 
           switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
             case 0: {
-              this->call_homeassistant_service(
-                  "light.turn_on",
-                  {{"entity_id", light}, {"kelvin", to_string(getIntFromVector(this->receivedMessage_, 6, 4))}});
+              this->call_homeassistant_service("light.turn_on",
+                                               {{"entity_id", connected_light_entity_id},
+                                                {"kelvin", to_string(getIntFromVector(this->receivedMessage_, 6, 4))}});
               break;
             }
 
             case 1: {
               this->call_homeassistant_service(
-                  "light.turn_on",
-                  {{"entity_id", light}, {"brightness", to_string(getIntFromVector(this->receivedMessage_, 6, 3))}});
+                  "light.turn_on", {{"entity_id", connected_light_entity_id},
+                                    {"brightness", to_string(getIntFromVector(this->receivedMessage_, 6, 3))}});
               break;
             }
           }
+
           break;
         }
 
         case 5: {
-          std::string light = this->get_connected_light_from_communication_id_(ID);
+          std::string connected_light_entity_id = this->get_connected_light_from_communication_id_(communication_id);
+
+          if (connected_light_entity_id == "")
+            break;
 
           switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
             case 0: {
-              this->call_homeassistant_service("script.esphome_changer_de_couleur",
-                                               {{"lumiere", light},
+              this->call_homeassistant_service("script.esphome_change_light_color",
+                                               {{"light", connected_light_entity_id},
                                                 {"r", to_string(getIntFromVector(this->receivedMessage_, 6, 3))},
                                                 {"g", to_string(getIntFromVector(this->receivedMessage_, 9, 3))},
                                                 {"b", to_string(getIntFromVector(this->receivedMessage_, 12, 3))}});
@@ -149,19 +160,20 @@ void ConnectedBedroom::process_message_() {
             }
 
             case 1: {
-              this->call_homeassistant_service(
-                  "light.turn_on",
-                  {{"entity_id", light}, {"kelvin", to_string(getIntFromVector(this->receivedMessage_, 6, 4))}});
+              this->call_homeassistant_service("light.turn_on",
+                                               {{"entity_id", connected_light_entity_id},
+                                                {"kelvin", to_string(getIntFromVector(this->receivedMessage_, 6, 4))}});
               break;
             }
 
             case 2: {
               this->call_homeassistant_service(
-                  "light.turn_on",
-                  {{"entity_id", light}, {"brightness", to_string(getIntFromVector(this->receivedMessage_, 6, 3))}});
+                  "light.turn_on", {{"entity_id", connected_light_entity_id},
+                                    {"brightness", to_string(getIntFromVector(this->receivedMessage_, 6, 3))}});
               break;
             }
           }
+
           break;
         }
       }
@@ -170,11 +182,11 @@ void ConnectedBedroom::process_message_() {
     }
 
     case 1: {
-      int ID = getIntFromVector(this->receivedMessage_, 1, 2);
+      int communication_id = getIntFromVector(this->receivedMessage_, 1, 2);
 
       switch (getIntFromVector(this->receivedMessage_, 3, 2)) {
         case 1: {
-          switch_::Switch *switch_ = this->get_switch_from_communication_id_(ID);
+          switch_::Switch *switch_ = this->get_switch_from_communication_id_(communication_id);
 
           if (switch_ != nullptr) {
             switch_->publish_state(getIntFromVector(this->receivedMessage_, 5, 1));
@@ -182,7 +194,7 @@ void ConnectedBedroom::process_message_() {
             break;
           }
 
-          alarm_control_panel::AlarmControlPanel *alarm = this->get_alarm_from_communication_id_(ID);
+          alarm_control_panel::AlarmControlPanel *alarm = this->get_alarm_from_communication_id_(communication_id);
 
           if (alarm != nullptr) {
             if (getIntFromVector(this->receivedMessage_, 5, 1) == 0)
@@ -194,7 +206,7 @@ void ConnectedBedroom::process_message_() {
             break;
           }
 
-          ConnectedBedroomTelevision *television = this->get_television_from_communication_id_(ID);
+          ConnectedBedroomTelevision *television = this->get_television_from_communication_id_(communication_id);
 
           if (television != nullptr) {
             television->state->publish_state(getIntFromVector(this->receivedMessage_, 5, 1));
@@ -206,7 +218,7 @@ void ConnectedBedroom::process_message_() {
         }
 
         case 3: {
-          alarm_control_panel::AlarmControlPanel *alarm = this->get_alarm_from_communication_id_(ID);
+          alarm_control_panel::AlarmControlPanel *alarm = this->get_alarm_from_communication_id_(communication_id);
 
           if (alarm == nullptr)
             break;
@@ -221,7 +233,10 @@ void ConnectedBedroom::process_message_() {
         }
 
         case 4: {
-          ConnectedBedroomTelevision *television = this->get_television_from_communication_id_(ID);
+          ConnectedBedroomTelevision *television = this->get_television_from_communication_id_(communication_id);
+
+          if (television == nullptr)
+            break;
 
           switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
             case 0: {
@@ -247,36 +262,41 @@ void ConnectedBedroom::process_message_() {
         }
 
         case 7: {
-          binary_sensor::BinarySensor *binary_sensor = this->get_binary_sensor_from_communication_id_(ID);
+          binary_sensor::BinarySensor *binary_sensor = this->get_binary_sensor_from_communication_id_(communication_id);
 
-          if (binary_sensor != nullptr)
-            binary_sensor->publish_state(getIntFromVector(this->receivedMessage_, 5, 1));
+          if (binary_sensor == nullptr)
+            break;
+
+          binary_sensor->publish_state(getIntFromVector(this->receivedMessage_, 5, 1));
 
           break;
         }
 
         case 8: {
-          sensor::Sensor *analog_sensor = this->get_analog_sensor_from_communication_id_(ID);
+          sensor::Sensor *analog_sensor = this->get_analog_sensor_from_communication_id_(communication_id);
 
-          if (analog_sensor != nullptr)
-            analog_sensor->publish_state(getIntFromVector(this->receivedMessage_, 5, 4));
+          if (analog_sensor == nullptr)
+            break;
+
+          analog_sensor->publish_state(getIntFromVector(this->receivedMessage_, 5, 4));
 
           break;
         }
 
         case 9: {
-          sensor::Sensor *analog_sensor = this->get_analog_sensor_from_communication_id_(ID);
+          sensor::Sensor *analog_sensor = this->get_analog_sensor_from_communication_id_(communication_id);
 
-          if (analog_sensor != nullptr)
-            analog_sensor->publish_state(float(getIntFromVector(this->receivedMessage_, 5, 4)) / float(100));
-
-          else
+          if (analog_sensor == nullptr)
             break;
 
-          analog_sensor = this->get_analog_sensor_from_communication_id_(ID + 1);
+          analog_sensor->publish_state(float(getIntFromVector(this->receivedMessage_, 5, 4)) / float(100));
 
-          if (analog_sensor != nullptr)
-            analog_sensor->publish_state(float(getIntFromVector(this->receivedMessage_, 9, 4)) / float(100));
+          analog_sensor = this->get_analog_sensor_from_communication_id_(communication_id + 1);
+
+          if (analog_sensor == nullptr)
+            break;
+
+          analog_sensor->publish_state(float(getIntFromVector(this->receivedMessage_, 9, 4)) / float(100));
 
           break;
         }
@@ -338,7 +358,7 @@ void ConnectedBedroom::update_connected_light_brightness_(std::string entity_id,
   int id = this->get_communication_id_from_connected_light_entity_id_(entity_id);
   this->write_str(addZeros(id, 2).c_str());
 
-  switch (this->get_type_from_connected_light_communication_id(id)) {
+  switch (this->get_type_from_connected_light_communication_id_(id)) {
     case TEMPERATURE_VARIABLE_CONNECTED_LIGHT: {
       this->write('0');
       this->write('5');
@@ -371,7 +391,7 @@ void ConnectedBedroom::update_connected_light_temperature_(std::string entity_id
   int id = this->get_communication_id_from_connected_light_entity_id_(entity_id);
   this->write_str(addZeros(id, 2).c_str());
 
-  switch (this->get_type_from_connected_light_communication_id(id)) {
+  switch (this->get_type_from_connected_light_communication_id_(id)) {
     case TEMPERATURE_VARIABLE_CONNECTED_LIGHT: {
       this->write('0');
       this->write('5');
@@ -421,36 +441,36 @@ void ConnectedBedroom::update_connected_light_color_(std::string entity_id, std:
 }
 
 void ConnectedBedroom::dump_config() {
-  ESP_LOGCONFIG(TAG, "Connected bedroom");
+  /*ESP_LOGCONFIG(TAG, "Connected bedroom:");
 
-  ESP_LOGCONFIG(TAG, "Analog sensors");
-  for (auto sens : this->analog_sensors_) {
-    ESP_LOGCONFIG(TAG, "Communication id: %d", sens.first);
-    LOG_SENSOR(TAG, "", sens.second);
+  ESP_LOGCONFIG(TAG, "  Analog sensors:");
+  for (auto entity : this->analog_sensors_) {
+    ESP_LOGCONFIG(TAG, "    Communication id: %d", entity.first);
+    LOG_SENSOR("", "      ", entity.second);
   }
 
-  ESP_LOGCONFIG(TAG, "Binary sensors");
-  for (auto sens : this->binary_sensors_) {
-    ESP_LOGCONFIG(TAG, "Communication id: %d", sens.first);
-    LOG_BINARY_SENSOR(TAG, "", sens.second);
+  ESP_LOGCONFIG(TAG, "  Binary sensors:");
+  for (auto entity : this->binary_sensors_) {
+    ESP_LOGCONFIG(TAG, "    Communication id: %d", entity.first);
+    LOG_BINARY_SENSOR("", "      ", entity.second);
   }
 
-  ESP_LOGCONFIG(TAG, "Switches");
-  for (auto sens : this->switches_) {
-    ESP_LOGCONFIG(TAG, "Communication id: %d", sens.first);
-    LOG_SWITCH(TAG, "", sens.second);
+  ESP_LOGCONFIG(TAG, "  Switches:");
+  for (auto entity : this->switches_) {
+    ESP_LOGCONFIG(TAG, "    Communication id: %d", entity.first);
+    LOG_SWITCH(TAG, "      ", entity.second);
   }
 
-  ESP_LOGCONFIG(TAG, "Alarms");
-  for (auto sens : this->alarms_) {
-    ESP_LOGCONFIG(TAG, "Communication id: %d", sens.first);
+  ESP_LOGCONFIG(TAG, "  Alarms:");
+  for (auto entity : this->alarms_) {
+    ESP_LOGCONFIG(TAG, "    Communication id: %d", entity.first);
   }
 
-  ESP_LOGCONFIG(TAG, "Connected lights");
-  for (auto light : this->connected_lights_) {
-    ESP_LOGCONFIG(TAG, "Entity id: %s", std::get<1>(light).c_str());
-    ESP_LOGCONFIG(TAG, "Communication id: %d", std::get<0>(light));
-  }
+  ESP_LOGCONFIG(TAG, "  Connected lights:");
+  for (auto entity : this->connected_lights_) {
+    ESP_LOGCONFIG(TAG, "    Communication id: %d", std::get<0>(entity));
+    ESP_LOGCONFIG(TAG, "      Entity id: %s", std::get<1>(entity).c_str());
+  }*/
 }
 
 void ConnectedBedroom::add_analog_sensor(int communication_id, sensor::Sensor *analog_sensor) {
@@ -568,7 +588,7 @@ int ConnectedBedroom::get_communication_id_from_connected_light_entity_id_(std::
   }
 }
 
-ConnectedLightTypes ConnectedBedroom::get_type_from_connected_light_communication_id(int communication_id) const {
+ConnectedLightTypes ConnectedBedroom::get_type_from_connected_light_communication_id_(int communication_id) const {
   auto it = std::find_if(connected_lights_.begin(), connected_lights_.end(),
                          [communication_id](const std::tuple<int, std::string, ConnectedLightTypes> &element) {
                            return std::get<0>(element) == communication_id;
@@ -589,7 +609,7 @@ void ConnectedBedroomDevice::set_parent(ConnectedBedroom *parent) {
   this->register_device();
 }
 
-void ConnectedBedroomSwitch::dump_config() { LOG_SWITCH("", "ConnectedBedroomSwitch", this); }
+void ConnectedBedroomSwitch::dump_config() { /*LOG_SWITCH("", "ConnectedBedroomSwitch", this);*/ }
 
 void ConnectedBedroomSwitch::register_device() { this->parent_->add_switch(this->communication_id_, this); }
 
@@ -603,12 +623,12 @@ void ConnectedBedroomSwitch::write_state(bool state) {
 }
 
 void ConnectedBedroomAlarmControlPanel::dump_config() {
-  ESP_LOGCONFIG(TAG, "ConnectedBedroomAlarmControlPanel");
+  /*ESP_LOGCONFIG(TAG, "ConnectedBedroomAlarmControlPanel");
   ESP_LOGCONFIG(TAG, "  Current State: %s", LOG_STR_ARG(alarm_control_panel_state_to_string(this->current_state_)));
   ESP_LOGCONFIG(TAG, "  Number of Codes: %u", this->codes_.size());
   if (!this->codes_.empty())
     ESP_LOGCONFIG(TAG, "  Requires Code To Arm: %s", YESNO(this->get_requires_code_to_arm()));
-  ESP_LOGCONFIG(TAG, "  Supported Features: %" PRIu32, this->get_supported_features());
+  ESP_LOGCONFIG(TAG, "  Supported Features: %" PRIu32, this->get_supported_features());*/
 }
 
 void ConnectedBedroomAlarmControlPanel::register_device() { this->parent_->add_alarm(this->communication_id_, this); }
@@ -670,10 +690,13 @@ void ConnectedBedroomAlarmControlPanel::control(const alarm_control_panel::Alarm
   this->parent_->write('\n');
 }
 
-void TelevisionState::set_parent(ConnectedBedroomTelevision *parent) {
+void TelevisionComponent::set_parent(ConnectedBedroomTelevision *parent) {
   this->parent_ = parent;
-  this->parent_->state = this;
+
+  this->register_component();
 }
+
+void TelevisionState::register_component() { this->parent_->state = this; }
 
 void TelevisionState::write_state(bool state) {
   this->parent_->parent_->write('0');
@@ -684,10 +707,7 @@ void TelevisionState::write_state(bool state) {
   this->parent_->parent_->write('\n');
 }
 
-void TelevisionMuted::set_parent(ConnectedBedroomTelevision *parent) {
-  this->parent_ = parent;
-  this->parent_->muted = this;
-}
+void TelevisionMuted::register_component() { this->parent_->muted = this; }
 
 void TelevisionMuted::write_state(bool state) {
   this->parent_->parent_->write('0');
@@ -698,10 +718,7 @@ void TelevisionMuted::write_state(bool state) {
   this->parent_->parent_->write('\n');
 }
 
-void TelevisionVolumeUp::set_parent(ConnectedBedroomTelevision *parent) {
-  this->parent_ = parent;
-  this->parent_->volume_up = this;
-}
+void TelevisionVolumeUp::register_component() { this->parent_->volume_up = this; }
 
 void TelevisionVolumeUp::press_action() {
   this->parent_->parent_->write('0');
@@ -712,10 +729,7 @@ void TelevisionVolumeUp::press_action() {
   this->parent_->parent_->write('\n');
 }
 
-void TelevisionVolumeDown::set_parent(ConnectedBedroomTelevision *parent) {
-  this->parent_ = parent;
-  this->parent_->volume_down = this;
-}
+void TelevisionVolumeDown::register_component() { this->parent_->volume_down = this; }
 
 void TelevisionVolumeDown::press_action() {
   this->parent_->parent_->write('0');
@@ -726,7 +740,7 @@ void TelevisionVolumeDown::press_action() {
   this->parent_->parent_->write('\n');
 }
 
-void ConnectedBedroomTelevision::dump_config() { ESP_LOGCONFIG(TAG, "ConnectedBedroomTelevision"); }
+void ConnectedBedroomTelevision::dump_config() { /*ESP_LOGCONFIG(TAG, "ConnectedBedroomTelevision");*/ }
 
 void ConnectedBedroomTelevision::register_device() { this->parent_->add_television(this->communication_id_, this); }
 
