@@ -497,6 +497,8 @@ void ConnectedBedroom::add_connected_light(int communication_id, std::string ent
   this->connected_lights_.push_back(std::make_tuple(communication_id, entity_id, type));
 }
 
+void ConnectedBedroom::add_RGB_LED_strip(int communication_id, light::LightOutput *light) {}
+
 sensor::Sensor *ConnectedBedroom::get_analog_sensor_from_communication_id_(int communication_id) const {
   auto it = std::find_if(analog_sensors_.begin(), analog_sensors_.end(),
                          [communication_id](const std::pair<int, sensor::Sensor *> &element) {
@@ -609,7 +611,8 @@ void ConnectedBedroomDevice::set_parent(ConnectedBedroom *parent) {
   this->register_device();
 }
 
-void ConnectedBedroomSwitch::dump_config() { /*LOG_SWITCH("", "ConnectedBedroomSwitch", this);*/ }
+void ConnectedBedroomSwitch::dump_config() { /*LOG_SWITCH("", "ConnectedBedroomSwitch", this);*/
+}
 
 void ConnectedBedroomSwitch::register_device() { this->parent_->add_switch(this->communication_id_, this); }
 
@@ -740,11 +743,39 @@ void TelevisionVolumeDown::press_action() {
   this->parent_->parent_->write('\n');
 }
 
-void ConnectedBedroomTelevision::dump_config() { /*ESP_LOGCONFIG(TAG, "ConnectedBedroomTelevision");*/ }
+void ConnectedBedroomTelevision::dump_config() { /*ESP_LOGCONFIG(TAG, "ConnectedBedroomTelevision");*/
+}
 
 void ConnectedBedroomTelevision::register_device() { this->parent_->add_television(this->communication_id_, this); }
 
 void ConnectedBedroomTelevision::setVolumeSensor(sensor::Sensor *sens) { this->volume = sens; }
+
+void ConnectedBedroomRGBLEDStrip::dump_config() {
+  // Dump config.
+}
+
+void ConnectedBedroomRGBLEDStrip::register_device() { this->parent_->add_RGB_LED_strip(this->communication_id_, this); }
+
+light::LightTraits ConnectedBedroomRGBLEDStrip::get_traits() {
+  auto traits = light::LightTraits();
+  traits.set_supported_color_modes({light::ColorMode::RGB});
+  return traits;
+}
+
+void ConnectedBedroomRGBLEDStrip::write_state(light::LightState *state) {
+  float red, green, blue;
+  state->current_values_as_rgb(&red, &green, &blue, false);
+
+  this->parent_->write('0');
+  this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
+  this->parent_->write('0');
+  this->parent_->write('3');
+  this->parent_->write('0');
+  this->parent_->write_str(addZeros(red, 3).c_str());
+  this->parent_->write_str(addZeros(green, 3).c_str());
+  this->parent_->write_str(addZeros(blue, 3).c_str());
+  this->parent_->write('\n');
+}
 
 }  // namespace connected_bedroom
 }  // namespace esphome

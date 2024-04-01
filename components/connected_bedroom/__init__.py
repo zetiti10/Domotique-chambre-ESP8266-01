@@ -1,13 +1,13 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import uart, sensor, binary_sensor, switch, alarm_control_panel, button
+from esphome.components import uart, sensor, binary_sensor, switch, alarm_control_panel, button, light
 from esphome.const import CONF_ID, CONF_SWITCHES, CONF_ENTITY_ID
 
 CODEOWNERS = ["@zetiti10"]
 
 MULTI_CONF = True
 DEPENDENCIES = ['uart']
-AUTO_LOAD = ['sensor', 'binary_sensor', 'switch', 'alarm_control_panel', 'button']
+AUTO_LOAD = ['sensor', 'binary_sensor', 'switch', 'alarm_control_panel', 'button', 'light']
 
 connected_bedroom_ns = cg.esphome_ns.namespace('connected_bedroom')
 
@@ -21,6 +21,7 @@ TelevisionMuted = connected_bedroom_ns.class_('TelevisionMuted', switch.Switch, 
 TelevisionVolumeUp = connected_bedroom_ns.class_('TelevisionVolumeUp', button.Button, TelevisionComponent)
 TelevisionVolumeDown = connected_bedroom_ns.class_('TelevisionVolumeDown', button.Button, TelevisionComponent)
 ConnectedBedroomTelevision = connected_bedroom_ns.class_('ConnectedBedroomTelevision', cg.Component, ConnectedBedroomDevice)
+ConnectedBedroomRGBLEDStrip = connected_bedroom_ns.class_('ConnectedBedroomRGBLEDStrip', cg.Component, ConnectedBedroom)
 
 ConnectedLightTypes = connected_bedroom_ns.enum("ConnectedLightsType")
 
@@ -34,6 +35,7 @@ CONF_MUTE_SWITCH = "mute_switch"
 CONF_VOLUME_UP_BUTTON = "volume_up_button"
 CONF_VOLUME_DOWN_BUTTON = "volume_down_button"
 CONF_VOLUME_STATE = "volume_state"
+CONF_RGB_LED_STRIPS = "RGB_LED_strips"
 CONF_CONNECTED_LIGHTS = "connected_lights"
 CONF_CONNECTED_LIGHT_TYPE = "type"
 CONF_COMMUNICATION_ID = "communication_id"
@@ -55,6 +57,7 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
                 }
             )
         ),
+
         cv.Optional(CONF_BINARY_SENSORS): cv.ensure_list(
             binary_sensor.BINARY_SENSOR_SCHEMA.extend(
                 {
@@ -62,6 +65,7 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
                 }
             )
         ),
+
         cv.Optional(CONF_SWITCHES): cv.ensure_list(
             switch.SWITCH_SCHEMA.extend(
                 {
@@ -70,6 +74,7 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
                 }
             )
         ),
+
         cv.Optional(CONF_ALARMS): cv.ensure_list(
             alarm_control_panel.ALARM_CONTROL_PANEL_SCHEMA.extend(
                 {
@@ -79,6 +84,7 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
                 }
             )
         ),
+
         cv.Optional(CONF_TELEVISIONS): cv.ensure_list(
             {
                 cv.GenerateID(): cv.declare_id(ConnectedBedroomTelevision),
@@ -102,6 +108,19 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
                 cv.Required(CONF_VOLUME_STATE) : sensor.SENSOR_SCHEMA,
             }
         ),
+
+        cv.Optional(CONF_RGB_LED_STRIPS): cv.ensure_list(
+            {
+                light.RGB_LIGHT_SCHEMA.extend(
+                    {
+                        cv.GenerateID() : cv.declare_id(ConnectedBedroomRGBLEDStrip),
+                        cv.Required(CONF_COMMUNICATION_ID): cv.positive_int,
+                    }
+                )
+
+            }
+        ),
+
         cv.Optional(CONF_CONNECTED_LIGHTS): cv.ensure_list(
             {
                 cv.Required(CONF_COMMUNICATION_ID): cv.positive_int,
@@ -110,7 +129,7 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
                     ENUM_CONNECTED_LIGHT_TYPES, upper=True
                 )
             }
-        )
+        ),
     }
 )
 
@@ -163,6 +182,13 @@ async def to_code(config):
         cg.add(volume_down_button.set_parent(television_var))
         volume = await sensor.new_sensor(conf[CONF_VOLUME_STATE])
         cg.add(television_var.setVolumeSensor(volume))
+        
+    for conf in config[CONF_RGB_LED_STRIPS]:
+        strip_var = cg.new_Pvariable(conf[CONF_ID])
+        await light.register_light(strip_var, conf)
+        communication_id = conf[CONF_COMMUNICATION_ID]
+        cg.add(strip_var.set_communication_id(communication_id))
+        cg.add(strip_var.set_parent(strip_var))
 
     for conf in config[CONF_CONNECTED_LIGHTS]:
         cg.add(var.add_connected_light(conf[CONF_COMMUNICATION_ID], conf[CONF_ENTITY_ID], conf[CONF_CONNECTED_LIGHT_TYPE]))

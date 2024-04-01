@@ -6,6 +6,7 @@
 #include "esphome/components/switch/switch.h"
 #include "esphome/components/button/button.h"
 #include "esphome/components/alarm_control_panel/alarm_control_panel.h"
+#include "esphome/components/light/light_output.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/components/api/custom_api_device.h"
 
@@ -33,6 +34,7 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
   void add_alarm(int communication_id, alarm_control_panel::AlarmControlPanel *alarm);
   void add_television(int communication_id, ConnectedBedroomTelevision *television);
   void add_connected_light(int communication_id, std::string entity_id, ConnectedLightTypes type);
+  void add_RGB_LED_strip(int communication_id, light::LightOutput *light);
 
  protected:
   void process_message_();
@@ -166,7 +168,16 @@ class ConnectedBedroomTelevision : public Component, public ConnectedBedroomDevi
   friend class TelevisionVolumeDown;
 };
 
-// RGB LED strip
+class ConnectedBedroomRGBLEDStrip : public Component, public light::LightOutput, public ConnectedBedroomDevice {
+ public:
+  void dump_config() override;
+
+  void register_device() override;
+
+  light::LightTraits get_traits() override;
+
+  void write_state(light::LightState *state) override;
+};
 
 }  // namespace connected_bedroom
 }  // namespace esphome
