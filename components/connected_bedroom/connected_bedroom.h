@@ -187,23 +187,25 @@ class ConnectedBedroomRGBLEDStrip : public Component, public light::LightOutput,
   bool previous_state_{false};
 };
 
-/*class ConnectedBedroomRGBLEDStripEffect {
- public:
-  void set_parent(ConnectedBedroom *parent);
-
- protected:
-  ConnectedBedroom *parent_;
-};*/
-
-class ConnectedBedroomRGBLEDStripRainbowEffect
-    : public light::LightEffect /*, public ConnectedBedroomRGBLEDStripEffect*/ {
+class ConnectedBedroomRGBLEDStripRainbowEffect : public light::LightEffect {
  public:
   explicit ConnectedBedroomRGBLEDStripRainbowEffect(const std::string &name);
 
-  // void start() override;
-  // void stop() override;
   void apply() override;
-  // void init() override;
+};
+
+class ConnectedBedroomRGBLEDStripSoundreactEffect : public light::LightEffect {
+ public:
+  explicit ConnectedBedroomRGBLEDStripSoundreactEffect(const std::string &name);
+
+  void apply() override;
+};
+
+class ConnectedBedroomRGBLEDStripAlarmEffect : public light::LightEffect {
+ public:
+  explicit ConnectedBedroomRGBLEDStripAlarmEffect(const std::string &name);
+
+  void apply() override;
 };
 
 }  // namespace connected_bedroom

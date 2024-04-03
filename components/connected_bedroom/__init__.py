@@ -25,8 +25,16 @@ TelevisionVolumeDown = connected_bedroom_ns.class_('TelevisionVolumeDown', butto
 ConnectedBedroomTelevision = connected_bedroom_ns.class_('ConnectedBedroomTelevision', cg.Component, ConnectedBedroomDevice)
 ConnectedBedroomRGBLEDStrip = connected_bedroom_ns.class_('ConnectedBedroomRGBLEDStrip', cg.Component, ConnectedBedroom)
 ConnectedBedroomRGBLEDStripRainbowEffect = connected_bedroom_ns.class_('ConnectedBedroomRGBLEDStripRainbowEffect', LightEffect)
+ConnectedBedroomRGBLEDStripSoundreactEffect = connected_bedroom_ns.class_('ConnectedBedroomRGBLEDStripSoundreactEffect', LightEffect)
+ConnectedBedroomRGBLEDStripAlarmEffect = connected_bedroom_ns.class_('ConnectedBedroomRGBLEDStripAlarmEffect', LightEffect)
 
 ConnectedLightTypes = connected_bedroom_ns.enum("ConnectedLightsType")
+
+ENUM_CONNECTED_LIGHT_TYPES = {
+    "BINARY_CONNECTED_LIGHT": ConnectedLightTypes.BINARY_CONNECTED_LIGHT,
+    "TEMPERATURE_VARIABLE_CONNECTED_LIGHT": ConnectedLightTypes.TEMPERATURE_VARIABLE_CONNECTED_LIGHT,
+    "COLOR_VARIABLE_CONNECTED_LIGHT": ConnectedLightTypes.COLOR_VARIABLE_CONNECTED_LIGHT,
+}
 
 CONF_ANALOG_SENSORS = "analog_sensors"
 CONF_BINARY_SENSORS = "binary_sensors"
@@ -43,20 +51,39 @@ CONF_CONNECTED_LIGHTS = "connected_lights"
 CONF_CONNECTED_LIGHT_TYPE = "type"
 CONF_COMMUNICATION_ID = "communication_id"
 
-ENUM_CONNECTED_LIGHT_TYPES = {
-    "BINARY_CONNECTED_LIGHT": ConnectedLightTypes.BINARY_CONNECTED_LIGHT,
-    "TEMPERATURE_VARIABLE_CONNECTED_LIGHT": ConnectedLightTypes.TEMPERATURE_VARIABLE_CONNECTED_LIGHT,
-    "COLOR_VARIABLE_CONNECTED_LIGHT": ConnectedLightTypes.COLOR_VARIABLE_CONNECTED_LIGHT,
-}
 
 @register_rgb_effect(
     "rainbow",
     ConnectedBedroomRGBLEDStripRainbowEffect,
-    "Rainbow",
+    "Arc-en-ciel",
     {
     },
 )
 async def rainbow_effect_to_code(config, effect_id):
+    var = cg.new_Pvariable(effect_id, config[CONF_NAME])
+    return var
+
+
+@register_rgb_effect(
+    "soundreact",
+    ConnectedBedroomRGBLEDStripSoundreactEffect,
+    "Son-réaction",
+    {
+    },
+)
+async def soundreact_effect_to_code(config, effect_id):
+    var = cg.new_Pvariable(effect_id, config[CONF_NAME])
+    return var
+
+
+@register_rgb_effect(
+    "alarm",
+    ConnectedBedroomRGBLEDStripAlarmEffect,
+    "Alarme",
+    {
+    },
+)
+async def alarm_effect_to_code(config, effect_id):
     var = cg.new_Pvariable(effect_id, config[CONF_NAME])
     return var
 
