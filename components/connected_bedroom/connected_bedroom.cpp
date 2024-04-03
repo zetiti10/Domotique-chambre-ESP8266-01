@@ -216,6 +216,8 @@ void ConnectedBedroom::process_message_() {
 
           ConnectedBedroomRGBLEDStrip *strip = this->get_RGB_LED_strip_from_communication_id(communication_id);
 
+          ESP_LOGD(TAG, "Received RGB LED strip state (on or off) change. Updating to the frontend...");
+
           if (strip != nullptr) {
             auto call = strip->state->make_call();
 
@@ -232,11 +234,15 @@ void ConnectedBedroom::process_message_() {
         case 2: {
           ConnectedBedroomRGBLEDStrip *strip = this->get_RGB_LED_strip_from_communication_id(communication_id);
 
+          ESP_LOGD(TAG, "Received RGB LED strip (color or effect) change. Updating to the frontend...");
+
           if (strip == nullptr)
             break;
 
           switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
             case 0: {
+              ESP_LOGD(TAG, "Updating color without effect...");
+
               int r_int = getIntFromVector(this->receivedMessage_, 6, 3);
               int g_int = getIntFromVector(this->receivedMessage_, 9, 3);
               int b_int = getIntFromVector(this->receivedMessage_, 12, 3);
@@ -259,6 +265,8 @@ void ConnectedBedroom::process_message_() {
             }
 
             case 1: {
+              ESP_LOGD(TAG, "Updating to Rainbow effect...");
+
               auto call = strip->state->make_call();
 
               call.set_effect("Rainbow");
@@ -824,13 +832,19 @@ light::LightTraits ConnectedBedroomRGBLEDStrip::get_traits() {
 void ConnectedBedroomRGBLEDStrip::setup_state(light::LightState *state) { this->state = state; }
 
 void ConnectedBedroomRGBLEDStrip::write_state(light::LightState *state) {
+  ESP_LOGD(TAG, "Received RGB LED strip state to write...");
+
   if (this->block_next_write_) {
+    ESP_LOGD(TAG, "Update blocked!");
+
     this->block_next_write_ = false;
 
     return;
   }
 
   if (!this->previous_state_ && this->state->remote_values.get_state()) {
+    ESP_LOGD(TAG, "Turning on...");
+
     previous_state_ = true;
 
     this->parent_->write('0');
@@ -842,6 +856,8 @@ void ConnectedBedroomRGBLEDStrip::write_state(light::LightState *state) {
   }
 
   else if (this->previous_state_ && !this->state->remote_values.get_state()) {
+    ESP_LOGD(TAG, "Turning off...");
+
     previous_state_ = false;
 
     this->parent_->write('0');
@@ -855,6 +871,8 @@ void ConnectedBedroomRGBLEDStrip::write_state(light::LightState *state) {
   }
 
   if (state->get_effect_name() == "Rainbow") {
+    ESP_LOGD(TAG, "Effect set to Rainbow...");
+
     this->parent_->write('0');
     this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
     this->parent_->write('0');
@@ -876,6 +894,8 @@ void ConnectedBedroomRGBLEDStrip::write_state(light::LightState *state) {
     return;
   }
 
+  ESP_LOGD(TAG, "Updating color...");
+
   float r, g, b;
   state->current_values_as_rgb(&r, &g, &b, false);
 
@@ -894,7 +914,11 @@ void ConnectedBedroomRGBLEDStrip::write_state(light::LightState *state) {
   this->parent_->write('\n');
 }
 
-void ConnectedBedroomRGBLEDStrip::block_next_write() { this->block_next_write_ = true; }
+void ConnectedBedroomRGBLEDStrip::block_next_write() {
+  ESP_LOGD(TAG, "Blocking next write.");
+
+  this->block_next_write_ = true;
+}
 
 }  // namespace connected_bedroom
 }  // namespace esphome
