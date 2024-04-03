@@ -909,11 +909,12 @@ void ConnectedBedroomRGBLEDStrip::write_state(light::LightState *state) {
   float r, g, b;
   state->current_values_as_rgb(&r, &g, &b, false);
 
-  int red = r * 255.0f;
-  int green = g * 255.0f;
-  int blue = b * 255.0f;
+  int red = int(r * 255.0f);
+  int green = int(g * 255.0f);
+  int blue = int(b * 255.0f);
 
-  ESP_LOGD(TAG, "Colors to write: %i, %i, %i.", red, green, blue);
+  ESP_LOGD(TAG, "Colors to write: %f, %f, %f.", r, g, b);
+  ESP_LOGD(TAG, "Colors to write formated: %i, %i, %i.", red, green, blue);
 
   this->parent_->write('0');
   this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
