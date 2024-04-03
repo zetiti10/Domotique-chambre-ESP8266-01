@@ -262,6 +262,8 @@ void ConnectedBedroom::process_message_() {
               call.set_effect("Arc-en-ciel");
               call.set_state(true);
               call.perform();
+
+              break;
             }
 
             case 2: {
@@ -269,6 +271,8 @@ void ConnectedBedroom::process_message_() {
               call.set_effect("Son-réaction");
               call.set_state(true);
               call.perform();
+
+              break;
             }
 
             case 3: {
@@ -276,6 +280,8 @@ void ConnectedBedroom::process_message_() {
               call.set_effect("Alarme");
               call.set_state(true);
               call.perform();
+
+              break;
             }
           }
 
@@ -885,7 +891,7 @@ void ConnectedBedroomRGBLEDStrip::write_state(light::LightState *state) {
     this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
     this->parent_->write('0');
     this->parent_->write('1');
-    this->parent_->write('2');
+    this->parent_->write('3');
     this->parent_->write('\n');
 
     return;
