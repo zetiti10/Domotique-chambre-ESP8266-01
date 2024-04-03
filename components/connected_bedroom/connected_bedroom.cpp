@@ -939,6 +939,9 @@ void ConnectedBedroomRGBLEDStrip::block_next_write() {
 
 void ConnectedBedroomRGBLEDStripRainbowEffect::start() {}*/
 
+ConnectedBedroomRGBLEDStripRainbowEffect::ConnectedBedroomRGBLEDStripRainbowEffect(const std::string &name)
+    : LightEffect(name) {}
+
 void ConnectedBedroomRGBLEDStripRainbowEffect::apply() {}
 
 /*void ConnectedBedroomRGBLEDStripRainbowEffect::init() {

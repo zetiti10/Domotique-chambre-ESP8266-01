@@ -195,12 +195,15 @@ class ConnectedBedroomRGBLEDStrip : public Component, public light::LightOutput,
   ConnectedBedroom *parent_;
 };*/
 
-class ConnectedBedroomRGBLEDStripRainbowEffect : public light::LightEffect/*, public ConnectedBedroomRGBLEDStripEffect*/ {
+class ConnectedBedroomRGBLEDStripRainbowEffect
+    : public light::LightEffect /*, public ConnectedBedroomRGBLEDStripEffect*/ {
  public:
-  //void start() override;
-  //void stop() override;
+  explicit ConnectedBedroomRGBLEDStripRainbowEffect(const std::string &name);
+
+  // void start() override;
+  // void stop() override;
   void apply() override;
-  //void init() override;
+  // void init() override;
 };
 
 }  // namespace connected_bedroom
