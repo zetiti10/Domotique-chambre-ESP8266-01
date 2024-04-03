@@ -90,7 +90,7 @@ void ConnectedBedroom::process_message_() {
   String message;
 
   for (int i = 0; i < this->receivedMessage_.size(); i ++) {
-    message += this->receivedMessage_[i];
+    message += char(this->receivedMessage_[i]);
   }
 
   ESP_LOGD(TAG, "Received message: %s", message.c_str());
