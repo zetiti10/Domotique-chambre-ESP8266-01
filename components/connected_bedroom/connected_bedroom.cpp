@@ -89,7 +89,7 @@ void ConnectedBedroom::loop() {
 void ConnectedBedroom::process_message_() {
   String message;
 
-  for (int i = 0; i < this->receivedMessage_.size(); i ++) {
+  for (int i = 0; i < this->receivedMessage_.size(); i++) {
     message += char(this->receivedMessage_[i]);
   }
 
@@ -707,6 +707,8 @@ void ConnectedBedroomDevice::set_parent(ConnectedBedroom *parent) {
   this->register_device();
 }
 
+ConnectedBedroom *ConnectedBedroomDevice::get_parent() const { return this->parent_; }
+
 void ConnectedBedroomSwitch::register_device() { this->parent_->add_switch(this->communication_id_, this); }
 
 void ConnectedBedroomSwitch::write_state(bool state) {
@@ -932,6 +934,18 @@ void ConnectedBedroomRGBLEDStrip::block_next_write() {
 
   this->block_next_write_ = true;
 }
+
+/*void ConnectedBedroomRGBLEDStripEffect::set_parent(ConnectedBedroom *parent) { this->parent_ = parent; }
+
+void ConnectedBedroomRGBLEDStripRainbowEffect::start() {}*/
+
+void ConnectedBedroomRGBLEDStripRainbowEffect::apply() {}
+
+/*void ConnectedBedroomRGBLEDStripRainbowEffect::init() {
+  ConnectedBedroomRGBLEDStrip *strip = static_cast<ConnectedBedroomRGBLEDStrip *>(this->state_->get_output());
+
+  this->parent_ = strip->get_parent();
+}*/
 
 }  // namespace connected_bedroom
 }  // namespace esphome

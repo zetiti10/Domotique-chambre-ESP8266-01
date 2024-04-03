@@ -1,7 +1,9 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import uart, sensor, binary_sensor, switch, alarm_control_panel, button, light
-from esphome.const import CONF_ID, CONF_SWITCHES, CONF_ENTITY_ID, CONF_OUTPUT_ID, CONF_DEFAULT_TRANSITION_LENGTH, CONF_GAMMA_CORRECT
+from esphome.components.light.types import LightEffect
+from esphome.components.light.effects import register_rgb_effect
+from esphome.const import CONF_ID, CONF_SWITCHES, CONF_ENTITY_ID, CONF_OUTPUT_ID, CONF_DEFAULT_TRANSITION_LENGTH, CONF_GAMMA_CORRECT, CONF_NAME
 
 CODEOWNERS = ["@zetiti10"]
 
@@ -22,6 +24,7 @@ TelevisionVolumeUp = connected_bedroom_ns.class_('TelevisionVolumeUp', button.Bu
 TelevisionVolumeDown = connected_bedroom_ns.class_('TelevisionVolumeDown', button.Button, TelevisionComponent)
 ConnectedBedroomTelevision = connected_bedroom_ns.class_('ConnectedBedroomTelevision', cg.Component, ConnectedBedroomDevice)
 ConnectedBedroomRGBLEDStrip = connected_bedroom_ns.class_('ConnectedBedroomRGBLEDStrip', cg.Component, ConnectedBedroom)
+ConnectedBedroomRGBLEDStripRainbowEffect = connected_bedroom_ns.class_('ConnectedBedroomRGBLEDStripRainbowEffect', LightEffect)
 
 ConnectedLightTypes = connected_bedroom_ns.enum("ConnectedLightsType")
 
@@ -46,6 +49,16 @@ ENUM_CONNECTED_LIGHT_TYPES = {
     "COLOR_VARIABLE_CONNECTED_LIGHT": ConnectedLightTypes.COLOR_VARIABLE_CONNECTED_LIGHT,
 }
 
+@register_rgb_effect(
+    "rainbow",
+    ConnectedBedroomRGBLEDStripRainbowEffect,
+    "Rainbow",
+    {
+    },
+)
+async def rainbow_effect_to_code(config, effect_id):
+    var = cg.new_Pvariable(effect_id, config[CONF_NAME])
+    return var
 
 CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
     {

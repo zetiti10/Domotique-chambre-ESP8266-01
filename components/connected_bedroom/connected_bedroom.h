@@ -7,6 +7,7 @@
 #include "esphome/components/button/button.h"
 #include "esphome/components/alarm_control_panel/alarm_control_panel.h"
 #include "esphome/components/light/light_output.h"
+#include "esphome/components/light/light_effect.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/components/api/custom_api_device.h"
 
@@ -65,12 +66,15 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
   std::vector<std::pair<int, ConnectedBedroomTelevision *>> televisions_;
   std::vector<std::pair<int, ConnectedBedroomRGBLEDStrip *>> RGB_LED_strips_;
   std::vector<std::tuple<int, std::string, ConnectedLightTypes>> connected_lights_;
+
+  friend class light::LightState;
 };
 
 class ConnectedBedroomDevice {
  public:
   void set_communication_id(int communication_id);
   void set_parent(ConnectedBedroom *parent);
+  ConnectedBedroom *get_parent() const;
 
   virtual void register_device() = 0;
 
@@ -181,6 +185,22 @@ class ConnectedBedroomRGBLEDStrip : public Component, public light::LightOutput,
  protected:
   bool block_next_write_{false};
   bool previous_state_{false};
+};
+
+/*class ConnectedBedroomRGBLEDStripEffect {
+ public:
+  void set_parent(ConnectedBedroom *parent);
+
+ protected:
+  ConnectedBedroom *parent_;
+};*/
+
+class ConnectedBedroomRGBLEDStripRainbowEffect : public light::LightEffect/*, public ConnectedBedroomRGBLEDStripEffect*/ {
+ public:
+  //void start() override;
+  //void stop() override;
+  void apply() override;
+  //void init() override;
 };
 
 }  // namespace connected_bedroom
