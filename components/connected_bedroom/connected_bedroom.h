@@ -20,6 +20,7 @@ enum ConnectedLightTypes {
 };
 
 class ConnectedBedroomTelevision;
+class ConnectedBedroomRGBLEDStrip;
 
 class ConnectedBedroom : public Component, public uart::UARTDevice, public api::CustomAPIDevice {
  public:
@@ -34,7 +35,7 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
   void add_alarm(int communication_id, alarm_control_panel::AlarmControlPanel *alarm);
   void add_television(int communication_id, ConnectedBedroomTelevision *television);
   void add_connected_light(int communication_id, std::string entity_id, ConnectedLightTypes type);
-  void add_RGB_LED_strip(int communication_id, light::LightOutput *light);
+  void add_RGB_LED_strip(int communication_id, ConnectedBedroomRGBLEDStrip *light);
 
  protected:
   void process_message_();
@@ -50,6 +51,7 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
   switch_::Switch *get_switch_from_communication_id_(int communication_id) const;
   alarm_control_panel::AlarmControlPanel *get_alarm_from_communication_id_(int communication_id) const;
   ConnectedBedroomTelevision *get_television_from_communication_id_(int communication_id) const;
+  ConnectedBedroomRGBLEDStrip *get_RGB_LED_strip_from_communication_id(int communication_id) const;
   std::string get_connected_light_from_communication_id_(int communication_id) const;
   int get_communication_id_from_connected_light_entity_id_(std::string entity_id) const;
   ConnectedLightTypes get_type_from_connected_light_communication_id_(int communication_id) const;
@@ -61,6 +63,7 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
   std::vector<std::pair<int, switch_::Switch *>> switches_;
   std::vector<std::pair<int, alarm_control_panel::AlarmControlPanel *>> alarms_;
   std::vector<std::pair<int, ConnectedBedroomTelevision *>> televisions_;
+  std::vector<std::pair<int, ConnectedBedroomRGBLEDStrip *>> RGB_LED_strips_;
   std::vector<std::tuple<int, std::string, ConnectedLightTypes>> connected_lights_;
 };
 
@@ -168,7 +171,16 @@ class ConnectedBedroomRGBLEDStrip : public Component, public light::LightOutput,
 
   light::LightTraits get_traits() override;
 
+  void setup_state(light::LightState *state) override;
   void write_state(light::LightState *state) override;
+
+  void block_next_write();
+
+  light::LightState *state{nullptr};
+
+ protected:
+  bool block_next_write_{false};
+  bool previous_state_{false};
 };
 
 }  // namespace connected_bedroom

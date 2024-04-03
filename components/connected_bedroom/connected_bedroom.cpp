@@ -214,6 +214,69 @@ void ConnectedBedroom::process_message_() {
             break;
           }
 
+          ConnectedBedroomRGBLEDStrip *strip = this->get_RGB_LED_strip_from_communication_id(communication_id);
+
+          if (strip != nullptr) {
+            auto call = strip->state->make_call();
+
+            call.set_state(getIntFromVector(this->receivedMessage_, 5, 1));
+
+            strip->block_next_write();
+
+            call.perform();
+          }
+
+          break;
+        }
+
+        case 2: {
+          ConnectedBedroomRGBLEDStrip *strip = this->get_RGB_LED_strip_from_communication_id(communication_id);
+
+          if (strip == nullptr)
+            break;
+
+          switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
+            case 0: {
+              int r_int = getIntFromVector(this->receivedMessage_, 6, 3);
+              int g_int = getIntFromVector(this->receivedMessage_, 9, 3);
+              int b_int = getIntFromVector(this->receivedMessage_, 12, 3);
+
+              float r_float = float(r_int) / 255.0f;
+              float g_float = float(g_int) / 255.0f;
+              float b_float = float(b_int) / 255.0f;
+
+              auto call = strip->state->make_call();
+
+              call.set_rgb(r_float, g_float, b_float);
+              call.set_effect(0u);
+              call.set_state(true);
+
+              strip->block_next_write();
+
+              call.perform();
+
+              break;
+            }
+
+            case 1: {
+              auto call = strip->state->make_call();
+
+              call.set_effect("Rainbow");
+              call.set_state(true);
+
+              call.perform();
+            }
+
+            case 2: {
+              auto call = strip->state->make_call();
+
+              call.set_effect("Soundreact");
+              call.set_state(true);
+
+              call.perform();
+            }
+          }
+
           break;
         }
 
@@ -497,7 +560,9 @@ void ConnectedBedroom::add_connected_light(int communication_id, std::string ent
   this->connected_lights_.push_back(std::make_tuple(communication_id, entity_id, type));
 }
 
-void ConnectedBedroom::add_RGB_LED_strip(int communication_id, light::LightOutput *light) {}
+void ConnectedBedroom::add_RGB_LED_strip(int communication_id, ConnectedBedroomRGBLEDStrip *light) {
+  this->RGB_LED_strips_.push_back(std::make_pair(communication_id, light));
+}
 
 sensor::Sensor *ConnectedBedroom::get_analog_sensor_from_communication_id_(int communication_id) const {
   auto it = std::find_if(analog_sensors_.begin(), analog_sensors_.end(),
@@ -558,6 +623,19 @@ ConnectedBedroomTelevision *ConnectedBedroom::get_television_from_communication_
                          });
 
   if (it != televisions_.end()) {
+    return it->second;
+  } else {
+    return nullptr;
+  }
+}
+
+ConnectedBedroomRGBLEDStrip *ConnectedBedroom::get_RGB_LED_strip_from_communication_id(int communication_id) const {
+  auto it = std::find_if(RGB_LED_strips_.begin(), RGB_LED_strips_.end(),
+                         [communication_id](const std::pair<int, ConnectedBedroomRGBLEDStrip *> &element) {
+                           return element.first == communication_id;
+                         });
+
+  if (it != RGB_LED_strips_.end()) {
     return it->second;
   } else {
     return nullptr;
@@ -743,7 +821,61 @@ light::LightTraits ConnectedBedroomRGBLEDStrip::get_traits() {
   return traits;
 }
 
+void ConnectedBedroomRGBLEDStrip::setup_state(light::LightState *state) { this->state = state; }
+
 void ConnectedBedroomRGBLEDStrip::write_state(light::LightState *state) {
+  if (this->block_next_write_) {
+    this->block_next_write_ = false;
+
+    return;
+  }
+
+  if (!this->previous_state_ && this->state->remote_values.get_state()) {
+    previous_state_ = true;
+
+    this->parent_->write('0');
+    this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
+    this->parent_->write('0');
+    this->parent_->write('0');
+    this->parent_->write('1');
+    this->parent_->write('\n');
+  }
+
+  else if (this->previous_state_ && !this->state->remote_values.get_state()) {
+    previous_state_ = false;
+
+    this->parent_->write('0');
+    this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
+    this->parent_->write('0');
+    this->parent_->write('0');
+    this->parent_->write('0');
+    this->parent_->write('\n');
+
+    return;
+  }
+
+  if (state->get_effect_name() == "Rainbow") {
+    this->parent_->write('0');
+    this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
+    this->parent_->write('0');
+    this->parent_->write('1');
+    this->parent_->write('1');
+    this->parent_->write('\n');
+
+    return;
+  }
+
+  else if (state->get_effect_name() == "Soundreact") {
+    this->parent_->write('0');
+    this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
+    this->parent_->write('0');
+    this->parent_->write('1');
+    this->parent_->write('2');
+    this->parent_->write('\n');
+
+    return;
+  }
+
   float r, g, b;
   state->current_values_as_rgb(&r, &g, &b, false);
 
@@ -761,6 +893,8 @@ void ConnectedBedroomRGBLEDStrip::write_state(light::LightState *state) {
   this->parent_->write_str(addZeros(blue, 3).c_str());
   this->parent_->write('\n');
 }
+
+void ConnectedBedroomRGBLEDStrip::block_next_write() { this->block_next_write_ = true; }
 
 }  // namespace connected_bedroom
 }  // namespace esphome
