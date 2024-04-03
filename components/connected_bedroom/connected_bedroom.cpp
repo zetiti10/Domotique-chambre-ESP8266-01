@@ -87,6 +87,14 @@ void ConnectedBedroom::loop() {
 }
 
 void ConnectedBedroom::process_message_() {
+  String message;
+
+  for (int i = 0; i < this->receivedMessage_.size(); i ++) {
+    message += this->receivedMessage_[i];
+  }
+
+  ESP_LOGD(TAG, "Received message: %s", message.c_str());
+
   switch (getIntFromVector(this->receivedMessage_, 0, 1)) {
     case 0: {
       int communication_id = getIntFromVector(this->receivedMessage_, 1, 2);
@@ -246,6 +254,8 @@ void ConnectedBedroom::process_message_() {
               int r_int = getIntFromVector(this->receivedMessage_, 6, 3);
               int g_int = getIntFromVector(this->receivedMessage_, 9, 3);
               int b_int = getIntFromVector(this->receivedMessage_, 12, 3);
+
+              ESP_LOGD(TAG, "Received colors: %i, %i, %i.", r_int, g_int, b_int);
 
               float r_float = float(r_int) / 255.0f;
               float g_float = float(g_int) / 255.0f;
@@ -902,6 +912,8 @@ void ConnectedBedroomRGBLEDStrip::write_state(light::LightState *state) {
   int red = r * 255.0f;
   int green = g * 255.0f;
   int blue = b * 255.0f;
+
+  ESP_LOGD(TAG, "Colors to write: %i, %i, %i.", red, green, blue);
 
   this->parent_->write('0');
   this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
