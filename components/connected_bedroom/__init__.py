@@ -225,10 +225,10 @@ async def to_code(config):
         if CONF_CODES in conf:
             for acode in conf[CONF_CODES]:
                 cg.add(alarm_var.add_code(acode))
-        baseNumber = await number.new_number(conf[CONF_MISSILE_LAUNCHER][CONF_BASE_NUMBER])
+        baseNumber = await number.new_number(conf[CONF_MISSILE_LAUNCHER][CONF_BASE_NUMBER], min_value=0, max_value=180, step=1)
         cg.add(baseNumber.set_communication_id(communication_id))
         cg.add(baseNumber.set_parent(var))
-        angleNumber = await number.new_number(conf[CONF_MISSILE_LAUNCHER][CONF_ANGLE_NUMBER])
+        angleNumber = await number.new_number(conf[CONF_MISSILE_LAUNCHER][CONF_ANGLE_NUMBER], min_value=0, max_value=40, step=1)
         cg.add(angleNumber.set_communication_id(communication_id))
         cg.add(angleNumber.set_parent(var))
         launchButton = await button.new_button(conf[CONF_MISSILE_LAUNCHER][CONF_LAUNCH_BUTTON])
