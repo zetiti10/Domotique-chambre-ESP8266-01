@@ -441,6 +441,19 @@ void ConnectedBedroom::process_message_() {
 
       break;
     }
+
+    case 3: {
+      switch (getIntFromVector(receivedMessage_, 1, 2)) {
+        case 1:
+          this->write('3');
+          this->write('0');
+          this->write('0');
+          this->write('\n');
+          break;
+      }
+
+      break;
+    }
   }
 
   this->receivedMessage_.clear();
