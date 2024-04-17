@@ -68,6 +68,8 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
 
   std::vector<uint8_t> receivedMessage_;
 
+  bool synchronized_{false};
+
   std::vector<std::pair<int, sensor::Sensor *>> analog_sensors_;
   std::vector<std::pair<int, binary_sensor::BinarySensor *>> binary_sensors_;
   std::vector<std::pair<int, switch_::Switch *>> switches_;

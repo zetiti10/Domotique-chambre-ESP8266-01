@@ -69,14 +69,16 @@ void ConnectedBedroom::setup() {
       }
     }
   }
-
-  this->write('3');
-  this->write('0');
-  this->write('0');
-  this->write('\n');
 }
 
 void ConnectedBedroom::loop() {
+  if (!synchronized_) {
+    this->write('3');
+    this->write('0');
+    this->write('0');
+    this->write('\n');
+  }
+
   while (this->available()) {
     uint8_t letter = this->read();
 
