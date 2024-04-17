@@ -77,6 +77,8 @@ void ConnectedBedroom::loop() {
     this->write('0');
     this->write('0');
     this->write('\n');
+
+    synchronized_ = true;
   }
 
   while (this->available()) {
