@@ -289,16 +289,66 @@ void ConnectedBedroom::process_message_() {
         }
 
         case 3: {
-          alarm_control_panel::AlarmControlPanel *alarm = this->get_alarm_from_communication_id_(communication_id);
+          switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
+            case 0: {
+              alarm_control_panel::AlarmControlPanel *alarm = this->get_alarm_from_communication_id_(communication_id);
 
-          if (alarm == nullptr)
-            break;
+              if (alarm == nullptr)
+                break;
 
-          if (getIntFromVector(this->receivedMessage_, 5, 1) == 0)
-            alarm->publish_state(alarm_control_panel::ACP_STATE_ARMED_AWAY);
+              alarm->publish_state(alarm_control_panel::ACP_STATE_ARMED_AWAY);
 
-          else if (getIntFromVector(this->receivedMessage_, 5, 1) == 1)
-            alarm->publish_state(alarm_control_panel::ACP_STATE_TRIGGERED);
+              break;
+            }
+
+            case 1: {
+              alarm_control_panel::AlarmControlPanel *alarm = this->get_alarm_from_communication_id_(communication_id);
+
+              if (alarm == nullptr)
+                break;
+
+              alarm->publish_state(alarm_control_panel::ACP_STATE_TRIGGERED);
+
+              break;
+            }
+
+            case 2: {
+              number::Number *button = this->get_missile_launcher_base_number_from_communication_id_(communication_id);
+
+              if (button == nullptr)
+                break;
+
+              button->publish_state(float(getIntFromVector(receivedMessage_, 6, 3)));
+
+              break;
+            }
+
+            case 3: {
+              number::Number *button = this->get_missile_launcher_angle_number_from_communication_id_(communication_id);
+
+              if (button == nullptr)
+                break;
+
+              button->publish_state(float(getIntFromVector(receivedMessage_, 6, 3)));
+
+              break;
+            }
+
+            case 4: {
+              sensor::Sensor *sensor =
+                  this->get_missile_launcher_available_missiles_sensor_from_communication_id_(communication_id);
+
+              if (sensor == nullptr)
+                break;
+
+              int count = getIntFromVector(receivedMessage_, 6, 1) + getIntFromVector(receivedMessage_, 7, 1) +
+                          getIntFromVector(receivedMessage_, 8, 1);
+
+              sensor->publish_state(float(count));
+
+              break;
+            }
+          }
 
           break;
         }
@@ -557,7 +607,79 @@ void ConnectedBedroom::add_switch(int communication_id, switch_::Switch *switch_
 }
 
 void ConnectedBedroom::add_alarm(int communication_id, alarm_control_panel::AlarmControlPanel *alarm) {
-  this->alarms_.push_back(std::make_pair(communication_id, alarm));
+  auto it =
+      std::find_if(alarms_.begin(), alarms_.end(),
+                   [communication_id](const std::tuple<int, alarm_control_panel::AlarmControlPanel *, number::Number *,
+                                                       number::Number *, button::Button *, sensor::Sensor *> &element) {
+                     return std::get<0>(element) == communication_id;
+                   });
+
+  if (it != alarms_.end()) {
+    std::get<1>(*it) = alarm;
+  } else {
+    this->alarms_.push_back(std::make_tuple(communication_id, alarm, nullptr, nullptr, nullptr, nullptr));
+  }
+}
+
+void ConnectedBedroom::add_alarm_missile_launcher_base_number(int communication_id, number::Number *number) {
+  auto it =
+      std::find_if(alarms_.begin(), alarms_.end(),
+                   [communication_id](const std::tuple<int, alarm_control_panel::AlarmControlPanel *, number::Number *,
+                                                       number::Number *, button::Button *, sensor::Sensor *> &element) {
+                     return std::get<0>(element) == communication_id;
+                   });
+
+  if (it != alarms_.end()) {
+    std::get<2>(*it) = number;
+  } else {
+    this->alarms_.push_back(std::make_tuple(communication_id, nullptr, number, nullptr, nullptr, nullptr));
+  }
+}
+
+void ConnectedBedroom::add_alarm_missile_launcher_angle_number(int communication_id, number::Number *number) {
+  auto it =
+      std::find_if(alarms_.begin(), alarms_.end(),
+                   [communication_id](const std::tuple<int, alarm_control_panel::AlarmControlPanel *, number::Number *,
+                                                       number::Number *, button::Button *, sensor::Sensor *> &element) {
+                     return std::get<0>(element) == communication_id;
+                   });
+
+  if (it != alarms_.end()) {
+    std::get<3>(*it) = number;
+  } else {
+    this->alarms_.push_back(std::make_tuple(communication_id, nullptr, nullptr, number, nullptr, nullptr));
+  }
+}
+
+void ConnectedBedroom::add_alarm_missile_launcher_launch_button(int communication_id, button::Button *button) {
+  auto it =
+      std::find_if(alarms_.begin(), alarms_.end(),
+                   [communication_id](const std::tuple<int, alarm_control_panel::AlarmControlPanel *, number::Number *,
+                                                       number::Number *, button::Button *, sensor::Sensor *> &element) {
+                     return std::get<0>(element) == communication_id;
+                   });
+
+  if (it != alarms_.end()) {
+    std::get<4>(*it) = button;
+  } else {
+    this->alarms_.push_back(std::make_tuple(communication_id, nullptr, nullptr, nullptr, button, nullptr));
+  }
+}
+
+void ConnectedBedroom::add_alarm_missile_launcher_available_missiles_sensor(int communication_id,
+                                                                            sensor::Sensor *sensor) {
+  auto it =
+      std::find_if(alarms_.begin(), alarms_.end(),
+                   [communication_id](const std::tuple<int, alarm_control_panel::AlarmControlPanel *, number::Number *,
+                                                       number::Number *, button::Button *, sensor::Sensor *> &element) {
+                     return std::get<0>(element) == communication_id;
+                   });
+
+  if (it != alarms_.end()) {
+    std::get<5>(*it) = sensor;
+  } else {
+    this->alarms_.push_back(std::make_tuple(communication_id, nullptr, nullptr, nullptr, nullptr, sensor));
+  }
 }
 
 void ConnectedBedroom::add_television(int communication_id, ConnectedBedroomTelevision *television) {
@@ -612,13 +734,77 @@ switch_::Switch *ConnectedBedroom::get_switch_from_communication_id_(int communi
 }
 
 alarm_control_panel::AlarmControlPanel *ConnectedBedroom::get_alarm_from_communication_id_(int communication_id) const {
-  auto it = std::find_if(alarms_.begin(), alarms_.end(),
-                         [communication_id](const std::pair<int, alarm_control_panel::AlarmControlPanel *> &element) {
-                           return element.first == communication_id;
-                         });
+  auto it =
+      std::find_if(alarms_.begin(), alarms_.end(),
+                   [communication_id](const std::tuple<int, alarm_control_panel::AlarmControlPanel *, number::Number *,
+                                                       number::Number *, button::Button *, sensor::Sensor *> &element) {
+                     return std::get<0>(element) == communication_id;
+                   });
 
   if (it != alarms_.end()) {
-    return it->second;
+    return std::get<1>(*it);
+  } else {
+    return nullptr;
+  }
+}
+
+number::Number *ConnectedBedroom::get_missile_launcher_base_number_from_communication_id_(int communication_id) const {
+  auto it =
+      std::find_if(alarms_.begin(), alarms_.end(),
+                   [communication_id](const std::tuple<int, alarm_control_panel::AlarmControlPanel *, number::Number *,
+                                                       number::Number *, button::Button *, sensor::Sensor *> &element) {
+                     return std::get<0>(element) == communication_id;
+                   });
+
+  if (it != alarms_.end()) {
+    return std::get<2>(*it);
+  } else {
+    return nullptr;
+  }
+}
+
+number::Number *ConnectedBedroom::get_missile_launcher_angle_number_from_communication_id_(int communication_id) const {
+  auto it =
+      std::find_if(alarms_.begin(), alarms_.end(),
+                   [communication_id](const std::tuple<int, alarm_control_panel::AlarmControlPanel *, number::Number *,
+                                                       number::Number *, button::Button *, sensor::Sensor *> &element) {
+                     return std::get<0>(element) == communication_id;
+                   });
+
+  if (it != alarms_.end()) {
+    return std::get<3>(*it);
+  } else {
+    return nullptr;
+  }
+}
+
+button::Button *ConnectedBedroom::get_missile_launcher_launch_button_from_communication_id_(
+    int communication_id) const {
+  auto it =
+      std::find_if(alarms_.begin(), alarms_.end(),
+                   [communication_id](const std::tuple<int, alarm_control_panel::AlarmControlPanel *, number::Number *,
+                                                       number::Number *, button::Button *, sensor::Sensor *> &element) {
+                     return std::get<0>(element) == communication_id;
+                   });
+
+  if (it != alarms_.end()) {
+    return std::get<4>(*it);
+  } else {
+    return nullptr;
+  }
+}
+
+sensor::Sensor *ConnectedBedroom::get_missile_launcher_available_missiles_sensor_from_communication_id_(
+    int communication_id) const {
+  auto it =
+      std::find_if(alarms_.begin(), alarms_.end(),
+                   [communication_id](const std::tuple<int, alarm_control_panel::AlarmControlPanel *, number::Number *,
+                                                       number::Number *, button::Button *, sensor::Sensor *> &element) {
+                     return std::get<0>(element) == communication_id;
+                   });
+
+  if (it != alarms_.end()) {
+    return std::get<5>(*it);
   } else {
     return nullptr;
   }
@@ -766,6 +952,47 @@ void ConnectedBedroomAlarmControlPanel::control(const alarm_control_panel::Alarm
     this->parent_->write('1');
   }
 
+  this->parent_->write('\n');
+}
+
+void ConnectedBedroomMissileLauncherBaseNumber::register_device() {
+  this->parent_->add_alarm_missile_launcher_base_number(this->communication_id_, this);
+}
+
+void ConnectedBedroomMissileLauncherBaseNumber::control(float value) {
+  this->parent_->write('0');
+  this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
+  this->parent_->write('0');
+  this->parent_->write('2');
+  this->parent_->write('2');
+  this->parent_->write_str(addZeros(value, 3).c_str());
+  this->parent_->write('\n');
+}
+
+void ConnectedBedroomMissileLauncherAngleNumber::register_device() {
+  this->parent_->add_alarm_missile_launcher_angle_number(this->communication_id_, this);
+}
+
+void ConnectedBedroomMissileLauncherAngleNumber::control(float value) {
+  this->parent_->write('0');
+  this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
+  this->parent_->write('0');
+  this->parent_->write('2');
+  this->parent_->write('3');
+  this->parent_->write_str(addZeros(value, 3).c_str());
+  this->parent_->write('\n');
+}
+
+void ConnectedBedroomMissileLauncherLaunchButton::register_device() {
+  this->parent_->add_alarm_missile_launcher_launch_button(this->communication_id_, this);
+}
+
+void ConnectedBedroomMissileLauncherLaunchButton::press_action() {
+  this->parent_->write('0');
+  this->parent_->write_str(addZeros(this->communication_id_, 2).c_str());
+  this->parent_->write('0');
+  this->parent_->write('2');
+  this->parent_->write('4');
   this->parent_->write('\n');
 }
 

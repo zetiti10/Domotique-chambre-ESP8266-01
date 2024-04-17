@@ -1,6 +1,6 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import uart, sensor, binary_sensor, switch, alarm_control_panel, button, light
+from esphome.components import uart, sensor, binary_sensor, switch, alarm_control_panel, button, light, number
 from esphome.components.light.types import LightEffect
 from esphome.components.light.effects import register_rgb_effect
 from esphome.const import CONF_ID, CONF_SWITCHES, CONF_ENTITY_ID, CONF_OUTPUT_ID, CONF_DEFAULT_TRANSITION_LENGTH, CONF_GAMMA_CORRECT, CONF_NAME
@@ -9,7 +9,7 @@ CODEOWNERS = ["@zetiti10"]
 
 MULTI_CONF = True
 DEPENDENCIES = ['uart']
-AUTO_LOAD = ['sensor', 'binary_sensor', 'switch', 'alarm_control_panel', 'button', 'light']
+AUTO_LOAD = ['sensor', 'binary_sensor', 'switch', 'alarm_control_panel', 'button', 'light', 'number']
 
 connected_bedroom_ns = cg.esphome_ns.namespace('connected_bedroom')
 
@@ -17,6 +17,9 @@ ConnectedBedroom = connected_bedroom_ns.class_('ConnectedBedroom', cg.Component,
 ConnectedBedroomDevice = connected_bedroom_ns.class_('ConnectedBedroomDevice')
 ConnectedBedroomSwitch = connected_bedroom_ns.class_('ConnectedBedroomSwitch', cg.Component, switch.Switch, ConnectedBedroomDevice)
 ConnectedBedroomAlarmControlPanel = connected_bedroom_ns.class_('ConnectedBedroomAlarmControlPanel', cg.Component, alarm_control_panel.AlarmControlPanel, ConnectedBedroomDevice)
+ConnectedBedroomMissileLauncherBaseNumber = connected_bedroom_ns.class_('ConnectedBedroomMissileLauncherBaseNumber', number.Number, ConnectedBedroomDevice)
+ConnectedBedroomMissileLauncherAngleNumber = connected_bedroom_ns.class_('ConnectedBedroomMissileLauncherAngleNumber', number.Number, ConnectedBedroomDevice)
+ConnectedBedroomMissileLauncherLaunchButton = connected_bedroom_ns.class_('ConnectedBedroomMissileLauncherLaunchButton', button.Button, ConnectedBedroomDevice)
 TelevisionComponent = connected_bedroom_ns.class_("TelevisionComponent")
 TelevisionState = connected_bedroom_ns.class_('TelevisionState', switch.Switch, TelevisionComponent)
 TelevisionMuted = connected_bedroom_ns.class_('TelevisionMuted', switch.Switch, TelevisionComponent)
@@ -39,6 +42,11 @@ ENUM_CONNECTED_LIGHT_TYPES = {
 CONF_ANALOG_SENSORS = "analog_sensors"
 CONF_BINARY_SENSORS = "binary_sensors"
 CONF_ALARMS = "alarms"
+CONF_MISSILE_LAUNCHER = "missile_launcher"
+CONF_BASE_NUMBER = "base_number"
+CONF_ANGLE_NUMBER = "angle_number"
+CONF_LAUNCH_BUTTON = "launch_button"
+CONF_MISSILES_SENSOR = "missiles_sensor"
 CONF_CODES = "codes"
 CONF_TELEVISIONS = "televisions"
 CONF_STATE_SWITCH = "state_switch"
@@ -121,6 +129,21 @@ CONFIG_SCHEMA = uart.UART_DEVICE_SCHEMA.extend(
                     cv.GenerateID(): cv.declare_id(ConnectedBedroomAlarmControlPanel),
                     cv.Optional(CONF_CODES): cv.ensure_list(cv.string_strict),
                     cv.Required(CONF_COMMUNICATION_ID): cv.positive_int,
+                    cv.Required(CONF_MISSILE_LAUNCHER) : cv.ensure_schema({
+                        cv.Required(CONF_BASE_NUMBER) : number.NUMBER_SCHEMA.extend(
+                            {
+                                cv.GenerateID(): cv.declare_id(ConnectedBedroomMissileLauncherBaseNumber),
+                            }),
+                        cv.Required(CONF_ANGLE_NUMBER) : number.NUMBER_SCHEMA.extend(
+                            {
+                                cv.GenerateID(): cv.declare_id(ConnectedBedroomMissileLauncherAngleNumber),
+                            }),
+                        cv.Required(CONF_LAUNCH_BUTTON) : button.BUTTON_SCHEMA.extend(
+                            {
+                                cv.GenerateID(): cv.declare_id(ConnectedBedroomMissileLauncherLaunchButton),
+                            }),
+                        cv.Required(CONF_MISSILES_SENSOR) : sensor.SENSOR_SCHEMA,
+                    })
                 }
             )
         ),
@@ -202,6 +225,18 @@ async def to_code(config):
         if CONF_CODES in conf:
             for acode in conf[CONF_CODES]:
                 cg.add(alarm_var.add_code(acode))
+        baseNumber = await number.new_number(conf[CONF_MISSILE_LAUNCHER][CONF_BASE_NUMBER])
+        cg.add(baseNumber.set_communication_id(communication_id))
+        cg.add(baseNumber.set_parent(var))
+        angleNumber = await number.new_number(conf[CONF_MISSILE_LAUNCHER][CONF_ANGLE_NUMBER])
+        cg.add(angleNumber.set_communication_id(communication_id))
+        cg.add(angleNumber.set_parent(var))
+        launchButton = await button.new_button(conf[CONF_MISSILE_LAUNCHER][CONF_LAUNCH_BUTTON])
+        cg.add(launchButton.set_communication_id(communication_id))
+        cg.add(launchButton.set_parent(var))
+        missilesState = await sensor.new_sensor(conf[CONF_MISSILE_LAUNCHER][CONF_MISSILES_SENSOR])
+        cg.add(var.add_alarm_missile_launcher_available_missiles_sensor(communication_id, missilesState))
+        
 
     for conf in config[CONF_TELEVISIONS]:
         television_var = cg.new_Pvariable(conf[CONF_ID])

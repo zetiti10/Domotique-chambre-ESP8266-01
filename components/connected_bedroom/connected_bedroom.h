@@ -6,6 +6,7 @@
 #include "esphome/components/switch/switch.h"
 #include "esphome/components/button/button.h"
 #include "esphome/components/alarm_control_panel/alarm_control_panel.h"
+#include "esphome/components/number/number.h"
 #include "esphome/components/light/light_output.h"
 #include "esphome/components/light/light_effect.h"
 #include "esphome/components/uart/uart.h"
@@ -34,6 +35,10 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
   void add_binary_sensor(int communication_id, binary_sensor::BinarySensor *binary_sensor);
   void add_switch(int communication_id, switch_::Switch *switch_);
   void add_alarm(int communication_id, alarm_control_panel::AlarmControlPanel *alarm);
+  void add_alarm_missile_launcher_base_number(int communication_id, number::Number *number);
+  void add_alarm_missile_launcher_angle_number(int communication_id, number::Number *number);
+  void add_alarm_missile_launcher_launch_button(int communication_id, button::Button *button);
+  void add_alarm_missile_launcher_available_missiles_sensor(int communication_id, sensor::Sensor *sensor);
   void add_television(int communication_id, ConnectedBedroomTelevision *television);
   void add_connected_light(int communication_id, std::string entity_id, ConnectedLightTypes type);
   void add_RGB_LED_strip(int communication_id, ConnectedBedroomRGBLEDStrip *light);
@@ -51,6 +56,10 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
   binary_sensor::BinarySensor *get_binary_sensor_from_communication_id_(int communication_id) const;
   switch_::Switch *get_switch_from_communication_id_(int communication_id) const;
   alarm_control_panel::AlarmControlPanel *get_alarm_from_communication_id_(int communication_id) const;
+  number::Number *get_missile_launcher_base_number_from_communication_id_(int communication_id) const;
+  number::Number *get_missile_launcher_angle_number_from_communication_id_(int communication_id) const;
+  button::Button *get_missile_launcher_launch_button_from_communication_id_(int communication_id) const;
+  sensor::Sensor *get_missile_launcher_available_missiles_sensor_from_communication_id_(int communication_id) const;
   ConnectedBedroomTelevision *get_television_from_communication_id_(int communication_id) const;
   ConnectedBedroomRGBLEDStrip *get_RGB_LED_strip_from_communication_id(int communication_id) const;
   std::string get_connected_light_from_communication_id_(int communication_id) const;
@@ -62,7 +71,9 @@ class ConnectedBedroom : public Component, public uart::UARTDevice, public api::
   std::vector<std::pair<int, sensor::Sensor *>> analog_sensors_;
   std::vector<std::pair<int, binary_sensor::BinarySensor *>> binary_sensors_;
   std::vector<std::pair<int, switch_::Switch *>> switches_;
-  std::vector<std::pair<int, alarm_control_panel::AlarmControlPanel *>> alarms_;
+  std::vector<std::tuple<int, alarm_control_panel::AlarmControlPanel *, number::Number *, number::Number *,
+                         button::Button *, sensor::Sensor *>>
+      alarms_;
   std::vector<std::pair<int, ConnectedBedroomTelevision *>> televisions_;
   std::vector<std::pair<int, ConnectedBedroomRGBLEDStrip *>> RGB_LED_strips_;
   std::vector<std::tuple<int, std::string, ConnectedLightTypes>> connected_lights_;
@@ -106,6 +117,36 @@ class ConnectedBedroomAlarmControlPanel : public Component,
   virtual void control(const alarm_control_panel::AlarmControlPanelCall &call) override;
 
   std::vector<std::string> codes_;
+};
+
+class ConnectedBedroomMissileLauncherBaseNumber : public Component,
+                                                  public number::Number,
+                                                  public ConnectedBedroomDevice {
+ public:
+  void register_device() override;
+
+ protected:
+  void control(float value) override;
+};
+
+class ConnectedBedroomMissileLauncherAngleNumber : public Component,
+                                                   public number::Number,
+                                                   public ConnectedBedroomDevice {
+ public:
+  void register_device() override;
+
+ protected:
+  void control(float value) override;
+};
+
+class ConnectedBedroomMissileLauncherLaunchButton : public Component,
+                                                    public button::Button,
+                                                    public ConnectedBedroomDevice {
+ public:
+  void register_device() override;
+
+ protected:
+  void press_action() override;
 };
 
 class TelevisionComponent {
