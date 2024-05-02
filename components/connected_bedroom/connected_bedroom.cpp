@@ -160,11 +160,17 @@ void ConnectedBedroom::process_message_() {
         case 5: {
           std::string connected_light_entity_id = this->get_connected_light_from_communication_id_(communication_id);
 
+          ESP_LOGD(TAG, "Controle de la couleur");
+          ESP_LOGD(TAG, "Lumiere trouvee : '%s'.", connected_light_entity_id.c_str());
+
           if (connected_light_entity_id == "")
             break;
 
+          ESP_LOGD(TAG, "Lumiere validee");
+
           switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
             case 0: {
+              ESP_LOGD(TAG, "Ici c'est bon");
               this->call_homeassistant_service("script.esphome_change_light_color",
                                                {{"light", connected_light_entity_id},
                                                 {"r", to_string(getIntFromVector(this->receivedMessage_, 6, 3))},
