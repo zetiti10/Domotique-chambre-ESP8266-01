@@ -165,7 +165,7 @@ void ConnectedBedroom::process_message_() {
 
           switch (getIntFromVector(this->receivedMessage_, 5, 1)) {
             case 0: {
-              this->call_homeassistant_service("script.esphome_change_light_color",
+              this->call_homeassistant_service("script.esphome_changer_de_couleur",
                                                {{"light", connected_light_entity_id},
                                                 {"r", to_string(getIntFromVector(this->receivedMessage_, 6, 3))},
                                                 {"g", to_string(getIntFromVector(this->receivedMessage_, 9, 3))},
