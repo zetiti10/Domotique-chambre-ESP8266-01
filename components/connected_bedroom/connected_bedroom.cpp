@@ -458,6 +458,19 @@ void ConnectedBedroom::process_message_() {
 
       break;
     }
+
+    case 4: {
+      std::string url;
+      for (int i = 1; i < this->receivedMessage_.size(); i++)
+        url.push_back(this->receivedMessage_[i]);
+
+      this->call_homeassistant_service(
+        "media_player.play_media",
+        {{"target", {{"entity_id", "media_player.television_google_cast_de_la_chambre_de_louis"}}},
+         {"data", {{"media_content_type", "video"}, {"media_content_id", url}}}});
+
+      break;
+    }
   }
 
   this->receivedMessage_.clear();
