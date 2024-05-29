@@ -466,7 +466,7 @@ void ConnectedBedroom::process_message_() {
 
       this->call_homeassistant_service(
         "script.jouer_musique_domotique_louis",
-        {"url", url});
+        {{"url", url}});
 
       break;
     }
