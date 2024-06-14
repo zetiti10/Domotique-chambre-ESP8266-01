@@ -456,8 +456,13 @@ void ConnectedBedroom::process_message_() {
           break;
 
         case 2:
+          std::string value = "false";
+          if (getIntFromVector(receivedMessage_, 3, 1) == 1)
+            value = "true";
+
           this->call_homeassistant_service("script.arreter_le_systeme_de_domotique_de_la_chambre_de_louis",
-                                           {{"redemarrer", to_string(getIntFromVector(receivedMessage_, 3, 1))}});
+                                           {{"redemarrer", value}});
+
           break;
       }
 
