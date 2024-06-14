@@ -458,6 +458,8 @@ void ConnectedBedroom::process_message_() {
         case 2:
           this->call_homeassistant_service("script.arreter_le_systeme_de_domotique_de_la_chambre_de_louis",
                                            {{"redemarrer", to_string(bool(getIntFromVector(receivedMessage_, 3, 1)))}});
+          ESP_LOGD(TAG, to_string(bool(getIntFromVector(receivedMessage_, 3, 1))).c_str());
+          ESP_LOGD(TAG, to_string(getIntFromVector(receivedMessage_, 3, 1)).c_str());
           break;
       }
 
@@ -469,9 +471,7 @@ void ConnectedBedroom::process_message_() {
       for (int i = 1; i < this->receivedMessage_.size(); i++)
         url.push_back(this->receivedMessage_[i]);
 
-      this->call_homeassistant_service(
-        "script.jouer_musique_domotique_louis",
-        {{"url", url}});
+      this->call_homeassistant_service("script.jouer_musique_domotique_louis", {{"url", url}});
 
       break;
     }
