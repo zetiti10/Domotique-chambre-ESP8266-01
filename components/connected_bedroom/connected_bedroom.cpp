@@ -457,7 +457,7 @@ void ConnectedBedroom::process_message_() {
 
         case 2:
           this->call_homeassistant_service("script.arreter_le_systeme_de_domotique_de_la_chambre_de_louis",
-                                           {{"redemarrer", bool(getIntFromVector(receivedMessage_, 3, 1))}});
+                                           {"redemarrer", bool(getIntFromVector(receivedMessage_, 3, 1))});
           break;
       }
 
