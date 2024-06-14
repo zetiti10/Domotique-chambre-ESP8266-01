@@ -463,6 +463,18 @@ void ConnectedBedroom::process_message_() {
 
       break;
     }
+
+    case 4: {
+      std::string url;
+      for (int i = 1; i < this->receivedMessage_.size(); i++)
+        url.push_back(this->receivedMessage_[i]);
+
+      this->call_homeassistant_service(
+        "script.jouer_musique_domotique_louis",
+        {{"url", url}});
+
+      break;
+    }
   }
 
   this->receivedMessage_.clear();
