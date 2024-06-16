@@ -265,4 +265,4 @@ async def to_code(config):
         cg.add(strip_var.set_parent(var))
 
     for conf in config[CONF_CONNECTED_LIGHTS]:
-        cg.add(var.add_connected_light(conf[CONF_COMMUNICATION_ID], conf[CONF_ENTITY_ID], conf[CONF_CONNECTED_LIGHT_TYPE]))
+        cg.add(var.add_connected_device(conf[CONF_COMMUNICATION_ID], conf[CONF_ENTITY_ID], conf[CONF_CONNECTED_LIGHT_TYPE]))
