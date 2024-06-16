@@ -204,10 +204,11 @@ async def to_code(config):
         communication_id = conf[CONF_COMMUNICATION_ID]
         cg.add(var.add_analog_sensor(communication_id, analog_sensor))
 
-    for conf in config[CONF_BINARY_SENSORS]:
-        binary_sensor_ = await binary_sensor.new_binary_sensor(conf)
-        communication_id = conf[CONF_COMMUNICATION_ID]
-        cg.add(var.add_binary_sensor(communication_id, binary_sensor_))
+    if (config[CONF_BINARY_SENSORS]):
+        for conf in config[CONF_BINARY_SENSORS]:
+            binary_sensor_ = await binary_sensor.new_binary_sensor(conf)
+            communication_id = conf[CONF_COMMUNICATION_ID]
+            cg.add(var.add_binary_sensor(communication_id, binary_sensor_))
 
     for conf in config[CONF_SWITCHES]:
         switch_ = await switch.new_switch(conf)

@@ -649,21 +649,11 @@ void ConnectedBedroom::dump_config() {
   ESP_LOGCONFIG(TAG, "  Alarms:");
   for (auto entity : this->alarms_) {
     ESP_LOGCONFIG(TAG, "    Communication id: %d", std::get<0>(entity));
-    ESP_LOGCONFIG(TAG, "      '%d'", std::get<1>(entity)->get_name());
-    ESP_LOGCONFIG(TAG, "      Base number: '%d'", std::get<2>(entity)->get_name());
-    ESP_LOGCONFIG(TAG, "      Angle number: '%d'", std::get<3>(entity)->get_name());
-    ESP_LOGCONFIG(TAG, "      Fire button: '%d'", std::get<4>(entity)->get_name());
-    ESP_LOGCONFIG(TAG, "      Missile sensor: '%d'", std::get<5>(entity)->get_name());
   }
 
   ESP_LOGCONFIG(TAG, "  Televisions:");
   for (auto entity : this->televisions_) {
     ESP_LOGCONFIG(TAG, "    Communication id: %d", entity.first);
-    ESP_LOGCONFIG(TAG, "      State switch '%d'", entity.second->state->get_name());
-    ESP_LOGCONFIG(TAG, "      Mute switch '%d'", entity.second->muted->get_name());
-    ESP_LOGCONFIG(TAG, "      Volume up button '%d'", entity.second->volume_up->get_name());
-    ESP_LOGCONFIG(TAG, "      Volume down button '%d'", entity.second->volume_down->get_name());
-    ESP_LOGCONFIG(TAG, "      Volume sensor '%d'", entity.second->volume->get_name());
   }
 
   ESP_LOGCONFIG(TAG, "  RGB LED strips:");
