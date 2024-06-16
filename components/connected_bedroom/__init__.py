@@ -199,71 +199,76 @@ async def to_code(config):
     await cg.register_component(var, config)
     await uart.register_uart_device(var, config)
 
-    for conf in config[CONF_ANALOG_SENSORS]:
-        analog_sensor = await sensor.new_sensor(conf)
-        communication_id = conf[CONF_COMMUNICATION_ID]
-        cg.add(var.add_analog_sensor(communication_id, analog_sensor))
+    if CONF_ANALOG_SENSORS in config:
+        for conf in config[CONF_ANALOG_SENSORS]:
+            analog_sensor = await sensor.new_sensor(conf)
+            communication_id = conf[CONF_COMMUNICATION_ID]
+            cg.add(var.add_analog_sensor(communication_id, analog_sensor))
 
-    if (config[CONF_BINARY_SENSORS]):
+    if CONF_BINARY_SENSORS in config:
         for conf in config[CONF_BINARY_SENSORS]:
             binary_sensor_ = await binary_sensor.new_binary_sensor(conf)
             communication_id = conf[CONF_COMMUNICATION_ID]
             cg.add(var.add_binary_sensor(communication_id, binary_sensor_))
 
-    for conf in config[CONF_SWITCHES]:
-        switch_ = await switch.new_switch(conf)
-        communication_id = conf[CONF_COMMUNICATION_ID]
-        cg.add(switch_.set_communication_id(communication_id))
-        cg.add(switch_.set_parent(var))
+    if CONF_SWITCHES in config:
+        for conf in config[CONF_SWITCHES]:
+            switch_ = await switch.new_switch(conf)
+            communication_id = conf[CONF_COMMUNICATION_ID]
+            cg.add(switch_.set_communication_id(communication_id))
+            cg.add(switch_.set_parent(var))
 
-    for conf in config[CONF_ALARMS]:
-        alarm_var = cg.new_Pvariable(conf[CONF_ID])
-        await cg.register_component(alarm_var, conf)
-        await alarm_control_panel.register_alarm_control_panel(alarm_var, conf)
-        communication_id = conf[CONF_COMMUNICATION_ID]
-        cg.add(alarm_var.set_communication_id(communication_id))
-        cg.add(alarm_var.set_parent(var))
-        if CONF_CODES in conf:
-            for acode in conf[CONF_CODES]:
-                cg.add(alarm_var.add_code(acode))
-        baseNumber = await number.new_number(conf[CONF_MISSILE_LAUNCHER][CONF_BASE_NUMBER], min_value=0, max_value=180, step=1)
-        cg.add(baseNumber.set_communication_id(communication_id))
-        cg.add(baseNumber.set_parent(var))
-        angleNumber = await number.new_number(conf[CONF_MISSILE_LAUNCHER][CONF_ANGLE_NUMBER], min_value=0, max_value=40, step=1)
-        cg.add(angleNumber.set_communication_id(communication_id))
-        cg.add(angleNumber.set_parent(var))
-        launchButton = await button.new_button(conf[CONF_MISSILE_LAUNCHER][CONF_LAUNCH_BUTTON])
-        cg.add(launchButton.set_communication_id(communication_id))
-        cg.add(launchButton.set_parent(var))
-        missilesState = await sensor.new_sensor(conf[CONF_MISSILE_LAUNCHER][CONF_MISSILES_SENSOR])
-        cg.add(var.add_alarm_missile_launcher_available_missiles_sensor(communication_id, missilesState))
+    if CONF_ALARMS in config:
+        for conf in config[CONF_ALARMS]:
+            alarm_var = cg.new_Pvariable(conf[CONF_ID])
+            await cg.register_component(alarm_var, conf)
+            await alarm_control_panel.register_alarm_control_panel(alarm_var, conf)
+            communication_id = conf[CONF_COMMUNICATION_ID]
+            cg.add(alarm_var.set_communication_id(communication_id))
+            cg.add(alarm_var.set_parent(var))
+            if CONF_CODES in conf:
+                for acode in conf[CONF_CODES]:
+                    cg.add(alarm_var.add_code(acode))
+            baseNumber = await number.new_number(conf[CONF_MISSILE_LAUNCHER][CONF_BASE_NUMBER], min_value=0, max_value=180, step=1)
+            cg.add(baseNumber.set_communication_id(communication_id))
+            cg.add(baseNumber.set_parent(var))
+            angleNumber = await number.new_number(conf[CONF_MISSILE_LAUNCHER][CONF_ANGLE_NUMBER], min_value=0, max_value=40, step=1)
+            cg.add(angleNumber.set_communication_id(communication_id))
+            cg.add(angleNumber.set_parent(var))
+            launchButton = await button.new_button(conf[CONF_MISSILE_LAUNCHER][CONF_LAUNCH_BUTTON])
+            cg.add(launchButton.set_communication_id(communication_id))
+            cg.add(launchButton.set_parent(var))
+            missilesState = await sensor.new_sensor(conf[CONF_MISSILE_LAUNCHER][CONF_MISSILES_SENSOR])
+            cg.add(var.add_alarm_missile_launcher_available_missiles_sensor(communication_id, missilesState))
         
+    if CONF_TELEVISIONS in config:
+        for conf in config[CONF_TELEVISIONS]:
+            television_var = cg.new_Pvariable(conf[CONF_ID])
+            await cg.register_component(television_var, conf)
+            communication_id = conf[CONF_COMMUNICATION_ID]
+            cg.add(television_var.set_communication_id(communication_id))
+            cg.add(television_var.set_parent(var))
+            state_switch = await switch.new_switch(conf[CONF_STATE_SWITCH])
+            cg.add(state_switch.set_parent(television_var))
+            mute_switch = await switch.new_switch(conf[CONF_MUTE_SWITCH])
+            cg.add(mute_switch.set_parent(television_var))
+            volume_up_button = await button.new_button(conf[CONF_VOLUME_UP_BUTTON])
+            cg.add(volume_up_button.set_parent(television_var))
+            volume_down_button = await button.new_button(conf[CONF_VOLUME_DOWN_BUTTON])
+            cg.add(volume_down_button.set_parent(television_var))
+            volume = await sensor.new_sensor(conf[CONF_VOLUME_STATE])
+            cg.add(television_var.setVolumeSensor(volume))
 
-    for conf in config[CONF_TELEVISIONS]:
-        television_var = cg.new_Pvariable(conf[CONF_ID])
-        await cg.register_component(television_var, conf)
-        communication_id = conf[CONF_COMMUNICATION_ID]
-        cg.add(television_var.set_communication_id(communication_id))
-        cg.add(television_var.set_parent(var))
-        state_switch = await switch.new_switch(conf[CONF_STATE_SWITCH])
-        cg.add(state_switch.set_parent(television_var))
-        mute_switch = await switch.new_switch(conf[CONF_MUTE_SWITCH])
-        cg.add(mute_switch.set_parent(television_var))
-        volume_up_button = await button.new_button(conf[CONF_VOLUME_UP_BUTTON])
-        cg.add(volume_up_button.set_parent(television_var))
-        volume_down_button = await button.new_button(conf[CONF_VOLUME_DOWN_BUTTON])
-        cg.add(volume_down_button.set_parent(television_var))
-        volume = await sensor.new_sensor(conf[CONF_VOLUME_STATE])
-        cg.add(television_var.setVolumeSensor(volume))
+    if CONF_RGB_LED_STRIPS in config:
+        for conf in config[CONF_RGB_LED_STRIPS]:
+            conf[CONF_DEFAULT_TRANSITION_LENGTH] = 0
+            conf[CONF_GAMMA_CORRECT] = 0
+            strip_var = cg.new_Pvariable(conf[CONF_OUTPUT_ID])
+            await light.register_light(strip_var, conf)
+            communication_id = conf[CONF_COMMUNICATION_ID]
+            cg.add(strip_var.set_communication_id(communication_id))
+            cg.add(strip_var.set_parent(var))
 
-    for conf in config[CONF_RGB_LED_STRIPS]:
-        conf[CONF_DEFAULT_TRANSITION_LENGTH] = 0
-        conf[CONF_GAMMA_CORRECT] = 0
-        strip_var = cg.new_Pvariable(conf[CONF_OUTPUT_ID])
-        await light.register_light(strip_var, conf)
-        communication_id = conf[CONF_COMMUNICATION_ID]
-        cg.add(strip_var.set_communication_id(communication_id))
-        cg.add(strip_var.set_parent(var))
-
-    for conf in config[CONF_CONNECTED_LIGHTS]:
-        cg.add(var.add_connected_device(conf[CONF_COMMUNICATION_ID], conf[CONF_ENTITY_ID], conf[CONF_CONNECTED_LIGHT_TYPE]))
+    if CONF_CONNECTED_LIGHTS in config:
+        for conf in config[CONF_CONNECTED_LIGHTS]:
+            cg.add(var.add_connected_device(conf[CONF_COMMUNICATION_ID], conf[CONF_ENTITY_ID], conf[CONF_CONNECTED_LIGHT_TYPE]))
