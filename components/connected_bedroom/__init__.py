@@ -34,7 +34,7 @@ ConnectedBedroomRGBLEDStripAlarmEffect = connected_bedroom_ns.class_('ConnectedB
 ConnectedLightTypes = connected_bedroom_ns.enum("ConnectedLightsType")
 
 ENUM_CONNECTED_LIGHT_TYPES = {
-    "BINARY_CONNECTED_LIGHT": ConnectedLightTypes.BINARY_CONNECTED_LIGHT,
+    "BINARY_CONNECTED_DEVICE": ConnectedLightTypes.BINARY_CONNECTED_DEVICE,
     "TEMPERATURE_VARIABLE_CONNECTED_LIGHT": ConnectedLightTypes.TEMPERATURE_VARIABLE_CONNECTED_LIGHT,
     "COLOR_VARIABLE_CONNECTED_LIGHT": ConnectedLightTypes.COLOR_VARIABLE_CONNECTED_LIGHT,
 }
