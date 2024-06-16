@@ -240,7 +240,7 @@ async def to_code(config):
             cg.add(launchButton.set_parent(var))
             missilesState = await sensor.new_sensor(conf[CONF_MISSILE_LAUNCHER][CONF_MISSILES_SENSOR])
             cg.add(var.add_alarm_missile_launcher_available_missiles_sensor(communication_id, missilesState))
-        
+
     if CONF_TELEVISIONS in config:
         for conf in config[CONF_TELEVISIONS]:
             television_var = cg.new_Pvariable(conf[CONF_ID])
