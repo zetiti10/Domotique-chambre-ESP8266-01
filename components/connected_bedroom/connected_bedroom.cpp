@@ -648,7 +648,7 @@ void ConnectedBedroom::dump_config() {
 
   ESP_LOGCONFIG(TAG, "  Alarms:");
   for (auto entity : this->alarms_) {
-    ESP_LOGCONFIG(TAG, "    Communication id: %d", entity.first);
+    ESP_LOGCONFIG(TAG, "    Communication id: %d", std::get<0>(alarms_));
   }
 
   ESP_LOGCONFIG(TAG, "  Connected lights:");
