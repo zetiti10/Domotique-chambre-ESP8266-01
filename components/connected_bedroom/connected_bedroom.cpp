@@ -626,35 +626,56 @@ void ConnectedBedroom::update_connected_light_color_(std::string entity_id, std:
 
 /// @brief Affiche la configuration actuelle du composant externe.
 void ConnectedBedroom::dump_config() {
-  ESP_LOGCONFIG("", "Connected bedroom");
+  ESP_LOGCONFIG(TAG, "Connected bedroom");
 
   ESP_LOGCONFIG(TAG, "  Analog sensors:");
   for (auto entity : this->analog_sensors_) {
     ESP_LOGCONFIG(TAG, "    Communication id: %d", entity.first);
-    LOG_SENSOR(TAG, "    ", entity.second);
+    LOG_SENSOR("      ", "", entity.second);
   }
 
   ESP_LOGCONFIG(TAG, "  Binary sensors:");
   for (auto entity : this->binary_sensors_) {
     ESP_LOGCONFIG(TAG, "    Communication id: %d", entity.first);
-    LOG_BINARY_SENSOR(TAG, "    ", entity.second);
+    LOG_BINARY_SENSOR("      ", "", entity.second);
   }
 
   ESP_LOGCONFIG(TAG, "  Switches:");
   for (auto entity : this->switches_) {
     ESP_LOGCONFIG(TAG, "    Communication id: %d", entity.first);
-    LOG_SWITCH(TAG, "    ", entity.second);
+    LOG_SWITCH("      ", "", entity.second);
   }
 
   ESP_LOGCONFIG(TAG, "  Alarms:");
   for (auto entity : this->alarms_) {
     ESP_LOGCONFIG(TAG, "    Communication id: %d", std::get<0>(entity));
+    ESP_LOGCONFIG(TAG, "      '%d'", std::get<1>(entity)->get_name());
+    ESP_LOGCONFIG(TAG, "      Base number: '%d'", std::get<2>(entity)->get_name());
+    ESP_LOGCONFIG(TAG, "      Angle number: '%d'", std::get<3>(entity)->get_name());
+    ESP_LOGCONFIG(TAG, "      Fire button: '%d'", std::get<4>(entity)->get_name());
+    ESP_LOGCONFIG(TAG, "      Missile sensor: '%d'", std::get<5>(entity)->get_name());
+  }
+
+  ESP_LOGCONFIG(TAG, "  Televisions:");
+  for (auto entity : this->televisions_) {
+    ESP_LOGCONFIG(TAG, "    Communication id: %d", entity.first);
+    ESP_LOGCONFIG(TAG, "      State switch '%d'", entity.second->state->get_name());
+    ESP_LOGCONFIG(TAG, "      Mute switch '%d'", entity.second->muted->get_name());
+    ESP_LOGCONFIG(TAG, "      Volume up button '%d'", entity.second->volume_up->get_name());
+    ESP_LOGCONFIG(TAG, "      Volume down button '%d'", entity.second->volume_down->get_name());
+    ESP_LOGCONFIG(TAG, "      Volume sensor '%d'", entity.second->volume->get_name());
+  }
+
+  ESP_LOGCONFIG(TAG, "  RGB LED strips:");
+  for (auto entity : this->RGB_LED_strips_) {
+    ESP_LOGCONFIG(TAG, "    Communication id: %d", entity.first);
+    ESP_LOGCONFIG(TAG, "      '%d'", entity.second->state->get_name());
   }
 
   ESP_LOGCONFIG(TAG, "  Connected lights:");
   for (auto entity : this->connected_lights_) {
     ESP_LOGCONFIG(TAG, "    Communication id: %d", std::get<0>(entity));
-    ESP_LOGCONFIG(TAG, "    Entity id: %s", std::get<1>(entity).c_str());
+    ESP_LOGCONFIG(TAG, "      Entity id: %s", std::get<1>(entity).c_str());
   }
 }
 
