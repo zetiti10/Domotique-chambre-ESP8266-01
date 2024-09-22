@@ -97,7 +97,7 @@ void ConnectedBedroom::setup() {
 
 /// @brief Méthode d'exécution des tâches liées à la connexion.
 void ConnectedBedroom::loop() {
-  // Au démarrage de lu système, on envoie un signal à l'Arduino Mega (on ne le fait pas dans le setup() car la communication en UART n'est pas encore initialisée).
+  // Au démarrage du système, on envoie un signal à l'Arduino Mega (on ne le fait pas dans le setup() car la communication en UART n'est pas encore initialisée).
   if (!synchronized_) {
     this->write('3');
     this->write('0');
