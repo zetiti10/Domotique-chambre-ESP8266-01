@@ -97,7 +97,7 @@ void ConnectedBedroom::setup() {
 
 /// @brief Méthode d'exécution des tâches liées à la connexion.
 void ConnectedBedroom::loop() {
-  // Au démarrage de lu système, on envoie un signal à l'Arduino Mega.
+  // Au démarrage de lu système, on envoie un signal à l'Arduino Mega (on ne le fait pas dans le setup() car la communication en UART n'est pas encore initialisée).
   if (!synchronized_) {
     this->write('3');
     this->write('0');
@@ -446,7 +446,7 @@ void ConnectedBedroom::process_message_() {
 
       this->call_homeassistant_service(
           "script.emettre_un_message",
-          {{"message", message}, {"enceinte", "media_player.reveil_google_cast_de_la_chambre_de_louis"}});
+          {{"volume", "1.0"}, {"message", message}, {"enceinte", "media_player.reveil_google_cast_de_la_chambre_de_louis"}});
 
       break;
     }
